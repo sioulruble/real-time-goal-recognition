@@ -1,0 +1,244 @@
+{"grab(bench)": {"place(bench)": 0.6, "push(bench)": 0.3, "grab(bottle)": 0.1}}
+{"grab(backpack)": {"place(backpack)": 0.5, "push(backpack)": 0.25, "pull(backpack)": 0.15, "grab(bottle)": 0.1}}
+{"grab(umbrella)": {"place(umbrella)": 0.5, "grab(backpack)": 0.3, "push(umbrella)": 0.2}}
+{"grab(handbag)": {"place(handbag)": 0.5, "grab(bottle)": 0.3, "grab(sandwich)": 0.2}}
+{"grab(tie)": {"place(tie)": 0.7, "push(tie)": 0.2, "pull(tie)": 0.1}}
+{"grab(suitcase)": {"place(suitcase)": 0.6, "push(suitcase)": 0.4}}
+{"grab(frisbee)": {"push(frisbee)": 0.6, "place(frisbee)": 0.4}}
+{"grab(skis)": {"place(skis)": 0.6, "push(skis)": 0.3, "grab(snowboard)": 0.1}}
+{"grab(snowboard)": {"place(snowboard)": 0.5, "push(snowboard)": 0.3, "grab(skis)": 0.2}}
+{"grab(sports ball)": {"place(sports ball)": 0.8, "push(sports ball)": 0.2}}
+{"grab(kite)": {"place(kite)": 1.0}}
+{"grab(baseball bat)": {"place(baseball bat)": 0.4, "grab(sports ball)": 0.35, "grab(baseball glove)": 0.25}}
+{"grab(baseball glove)": {"place(baseball glove)": 0.4, "grab(baseball bat)": 0.35, "grab(sports ball)": 0.25}}
+{"grab(skateboard)": {"place(skateboard)": 0.6, "push(skateboard)": 0.4}}
+{"grab(tennis racket)": {"place(tennis racket)": 0.4, "grab(sports ball)": 0.35, "push(sports ball)": 0.25}}
+{"grab(bottle)": {"place(bottle)": 0.6, "pour(bottle)": 0.4}}
+{"grab(wine glass)": {"place(wine glass)": 0.6, "grab(bottle)": 0.3, "pour(bottle)": 0.1}}
+{"grab(cup)": {"place(cup)": 0.6, "grab(bottle)": 0.4}}
+{"grab(fork)": {"grab(knife)": 0.35, "grab(spoon)": 0.3, "place(fork)": 0.25, "grab(bowl)": 0.1}}
+{"grab(knife)": {"place(knife)": 0.4, "grab(banana)": 0.2, "grab(apple)": 0.2, "grab(carrot)": 0.2}}
+{"grab(spoon)": {"place(spoon)": 0.4, "pour(bottle)": 0.3, "place(bowl)": 0.2, "place(wine glass)": 0.1}}
+{"grab(bowl)": {"place(bowl)": 0.5, "pour(bowl)": 0.3, "grab(bottle)": 0.2}}
+{"grab(banana)": {"place(banana)": 0.6, "grab(cup)": 0.3, "grab(bottle)": 0.1}}
+{"grab(apple)": {"place(apple)": 1.0}}
+{"grab(sandwich)": {"place(sandwich)": 0.5, "grab(fork)": 0.3, "grab(knife)": 0.2}}
+{"grab(orange)": {"place(orange)": 0.6, "grab(knife)": 0.3, "push(orange)": 0.1}}
+{"grab(broccoli)": {"place(broccoli)": 0.4, "grab(fork)": 0.25, "grab(knife)": 0.2, "pour(bottle)": 0.15}}
+{"grab(carrot)": {"place(carrot)": 0.6, "grab(bowl)": 0.4}}
+{"grab(hot dog)": {"place(hot dog)": 0.5, "grab(fork)": 0.3, "grab(knife)": 0.2}}
+{"grab(pizza)": {"place(pizza)": 0.7, "grab(fork)": 0.2, "grab(knife)": 0.1}}
+{"grab(donut)": {"place(donut)": 0.8, "grab(fork)": 0.2}}
+{"grab(cake)": {"place(cake)": 0.5, "place(bowl)": 0.3, "place(cup)": 0.2}}
+{"grab(chair)": {"place(chair)": 1.0}}
+{"grab(couch)": {"place(couch)": 0.6, "push(couch)": 0.3, "pull(couch)": 0.1}}
+{"grab(potted plant)": {"place(potted plant)": 1.0}}
+{"grab(dining table)": {"place(dining table)": 0.6, "push(dining table)": 0.3, "pull(dining table)": 0.1}}
+{"grab(laptop)": {"place(laptop)": 0.6, "push(laptop)": 0.4}}
+{"grab(mouse)": {"place(mouse)": 0.4, "place(laptop)": 0.3, "push(laptop)": 0.2, "grab(laptop)": 0.1}}
+{"grab(remote)": {"press(remote)": 0.7, "place(remote)": 0.3}}
+{"grab(keyboard)": {"place(keyboard)": 0.5, "press(keyboard)": 0.3, "place(laptop)": 0.2}}
+{"grab(cell phone)": {"place(cell phone)": 0.6, "press(cell phone)": 0.4}}
+{"grab(toaster)": {"place(toaster)": 0.6, "press(toaster)": 0.4}}
+{"grab(book)": {"place(book)": 0.6, "grab(cup)": 0.3, "push(book)": 0.1}}
+{"grab(vase)": {"place(vase)": 0.6, "grab(potted plant)": 0.3, "place(dining table)": 0.1}}
+{"grab(scissors)": {"place(scissors)": 0.6, "grab(bottle)": 0.2, "grab(cup)": 0.1, "grab(wine glass)": 0.1}}
+{"grab(teddy bear)": {"place(teddy bear)": 1.0}}
+{"grab(hair drier)": {"place(hair drier)": 0.6, "press(hair drier)": 0.3, "push(hair, drier)": 0.1}}
+{"grab(toothbrush)": {"place(toothbrush)": 0.5, "grab(bottle)": 0.3, "push(toothbrush)": 0.15, "pull(toothbrush)": 0.05}}
+{"push(bench)": {"place(bench)": 0.6, "push(chair)": 0.2, "push(couch)": 0.1, "push(dining table)": 0.1}}
+{"push(backpack)": {"place(backpack)": 0.7, "grab(bottle)": 0.3}}
+{"push(umbrella)": {"place(umbrella)": 0.6, "grab(bottle)": 0.2, "push(bottle)": 0.1, "place(bottle)": 0.1}}
+{"push(handbag)": {"place(handbag)": 1.0}}
+{"push(tie)": {"place(tie)": 1.0}}
+{"push(suitcase)": {"place(suitcase)": 0.7, "push(bottle)": 0.2, "grab(bottle)": 0.1}}
+{"push(frisbee)": {"place(frisbee)": 0.5, "push(sports ball)": 0.3, "grab(sports ball)": 0.2}}
+{"push(skis)": {"place(skis)": 0.4, "push(snowboard)": 0.3, "push(sports ball)": 0.2, "push(ski boot)": 0.1}}
+{"push(snowboard)": {"place(snowboard)": 0.5, "push(skis)": 0.3, "push(sports ball)": 0.2}}
+{"push(sports ball)": {"place(sports ball)": 0.6, "push(tennis racket)": 0.4}}
+{"push(kite)": {"place(kite)": 0.5, "push(frisbee)": 0.25, "push(sports ball)": 0.15, "push(skis)": 0.1}}
+{"push(baseball bat)": {"place(baseball bat)": 0.4, "grab(baseball)": 0.35, "place(baseball glove)": 0.25}}
+{"push(baseball glove)": {"place(baseball glove)": 0.4, "grab(baseball bat)": 0.35, "push(baseball bat)": 0.25}}
+{"push(skateboard)": {"place(skateboard)": 0.4, "push(sports ball)": 0.3, "push(frisbee)": 0.2, "push(skis)": 0.1}}
+{"push(tennis racket)": {"place(tennis racket)": 0.5, "grab(sports ball)": 0.3, "push(sports ball)": 0.2}}
+{"push(bottle)": {"place(bottle)": 0.5, "pour(bottle)": 0.4, "place(wine glass)": 0.1}}
+{"push(wine glass)": {"place(wine glass)": 0.6, "grab(bottle)": 0.4}}
+{"push(cup)": {"place(cup)": 0.6, "pour(bottle)": 0.3, "grab(bottle)": 0.1}}
+{"push(fork)": {"place(fork)": 0.6, "pour(bottle)": 0.3, "grab(bottle)": 0.1}}
+{"push(knife)": {"place(knife)": 0.4, "push(bottle)": 0.3, "grab(banana)": 0.2, "push(bowl)": 0.1}}
+{"push(spoon)": {"place(spoon)": 0.45, "place(bowl)": 0.25, "place(fork)": 0.2, "place(cup)": 0.1}}
+{"push(bowl)": {"place(bowl)": 1.0}}
+{"push(banana)": {"place(banana)": 0.5, "push(apple)": 0.3, "push(orange)": 0.2}}
+{"push(apple)": {"place(apple)": 0.5, "grab(banana)": 0.3, "grab(bottle)": 0.2}}
+{"push(orange)": {"place(orange)": 0.6, "grab(banana)": 0.2, "grab(apple)": 0.15, "grab(sandwich)": 0.05}}
+{"push(broccoli)": {"place(bowl)": 0.6, "place(cup)": 0.2, "place(dining table)": 0.2}}
+{"push(carrot)": {"place(carrot)": 0.6, "grab(bowl)": 0.3, "grab(knife)": 0.1}}
+{"push(hot dog)": {"place(hot dog)": 0.6, "grab(bottle)": 0.4}}
+{"push(pizza)": {"place(pizza)": 1.0}}
+{"push(donut)": {"place(donut)": 0.7, "grab(cup)": 0.3}}
+{"push(cake)": {"place(cake)": 0.6, "grab(fork)": 0.2, "grab(spoon)": 0.1, "pour(cup)": 0.05}}
+{"push(chair)": {"place(chair)": 0.5, "push(dining table)": 0.3, "push(couch)": 0.2}}
+{"push(couch)": {"place(couch)": 0.4, "push(chair)": 0.3, "push(table)": 0.2, "place(chair)": 0.1}}
+{"push(potted plant)": {"place(potted plant)": 0.6, "grab(bottle)": 0.3, "push(chair)": 0.1}}
+{"push(dining table)": {"place(bottle)": 0.3, "place(wine glass)": 0.25, "push(chair)": 0.25, "place(cup)": 0.2}}
+{"push(laptop)": {"place(laptop)": 0.6, "grab(mouse)": 0.25, "grab(keyboard)": 0.15}}
+{"push(mouse)": {"place(mouse)": 0.5, "grab(keyboard)": 0.3, "place(laptop)": 0.2}}
+{"push(remote)": {"place(remote)": 1.0}}
+{"push(keyboard)": {"place(keyboard)": 0.5, "grab(mouse)": 0.25, "grab(laptop)": 0.25}}
+{"push(cell phone)": {"place(cell phone)": 0.6, "press(cell phone)": 0.4}}
+{"push(toaster)": {"place(toaster)": 1.0}}
+{"push(book)": {"place(book)": 0.5, "grab(bottle)": 0.3, "grab(cup)": 0.2}}
+{"push(vase)": {"place(vase)": 0.7, "place(bottle)": 0.2, "place(wine glass)": 0.1}}
+{"push(scissors)": {"place(scissors)": 1.0}}
+{"push(teddy bear)": {"place(teddy bear)": 1.0}}
+{"push(hair drier)": {"place(hair drier)": 1.0}}
+{"push(toothbrush)": {"push(bottle)": 0.5, "grab(bottle)": 0.5}}
+{"place(bench)": {"place(chair)": 0.4, "place(couch)": 0.3, "place(dining table)": 0.2, "place(potted plant)": 0.1}}
+{"place(backpack)": {"grab(bottle)": 0.3, "grab(sports ball)": 0.25, "grab(sandwich)": 0.2, "grab(banana)": 0.25}}
+{"place(umbrella)": {"grab(backpack)": 0.35, "grab(bottle)": 0.3, "place(bottle)": 0.25, "push(bench)": 0.1}}
+{"place(handbag)": {"grab(bottle)": 0.35, "grab(cup)": 0.25, "place(chair)": 0.25, "place(couch)": 0.15}}
+{"place(tie)": {"grab(bottle)": 0.35, "grab(wine glass)": 0.25, "grab(cup)": 0.25, "push(chair)": 0.15}}
+{"place(suitcase)": {"grab(bottle)": 0.4, "grab(wine glass)": 0.3, "grab(cup)": 0.2, "grab(banana)": 0.1}}
+{"place(frisbee)": {"push(sports ball)": 0.4, "grab(sports ball)": 0.35, "place(sports ball)": 0.25}}
+{"place(skis)": {"grab(snowboard)": 0.5, "place(snowboard)": 0.3, "push(snowboard)": 0.2}}
+{"place(snowboard)": {"place(ski)": 0.5, "push(ski)": 0.3, "place(bottle)": 0.2}}
+{"place(sports ball)": {"grab(tennis racket)": 0.3, "grab(baseball bat)": 0.3, "grab(skateboard)": 0.2, "push(sports ball)": 0.2}}
+{"place(kite)": {"grab(frisbee)": 0.4, "push(sports ball)": 0.35, "place(sports ball)": 0.25}}
+{"place(baseball bat)": {"place(baseball glove)": 0.5, "grab(baseball)": 0.3, "place(sports ball)": 0.2}}
+{"place(baseball glove)": {"grab(baseball bat)": 0.4, "grab(sports ball)": 0.35, "grab(baseball)": 0.25}}
+{"place(skateboard)": {"grab(sports ball)": 0.4, "grab(bottle)": 0.35, "push(skateboard)": 0.25}}
+{"place(tennis racket)": {"grab(sports ball)": 0.6, "place(sports ball)": 0.3, "push(sports ball)": 0.1}}
+{"place(bottle)": {"place(wine glass)": 0.4, "place(cup)": 0.4, "pour(bottle)": 0.2}}
+{"place(wine glass)": {"grab(bottle)": 0.4, "place(bottle)": 0.3, "place(cup)": 0.2, "pour(bottle)": 0.1}}
+{"place(cup)": {"place(cup)": 0.6, "grab(bottle)": 0.4}}
+{"place(fork)": {"place(bowl)": 0.3, "place(cup)": 0.3, "grab(knife)": 0.2, "grab(spoon)": 0.2}}
+{"place(knife)": {"grab(fork)": 0.35, "grab(spoon)": 0.35, "place(cup)": 0.15, "place(bowl)": 0.15}}
+{"place(spoon)": {"place(fork)": 0.35, "place(knife)": 0.3, "place(bowl)": 0.25, "place(cup)": 0.1}}
+{"place(bowl)": {"grab(cup)": 0.35, "grab(spoon)": 0.25, "place(fork)": 0.25, "pour(bottle)": 0.15}}
+{"place(banana)": {"place(bowl)": 0.5, "grab(knife)": 0.3, "place(cup)": 0.2}}
+{"place(apple)": {"grab(banana)": 0.5, "grab(orange)": 0.3, "grab(cup)": 0.2}}
+{"place(sandwich)": {"grab(fork)": 0.4, "grab(knife)": 0.3, "grab(spoon)": 0.3}}
+{"place(orange)": {"grab(fork)": 0.4, "grab(knife)": 0.3, "place(bottle)": 0.2, "place(wine glass)": 0.1}}
+{"place(broccoli)": {"place(banana)": 0.25, "place(apple)": 0.25, "place(sandwich)": 0.2, "grab(fork)": 0.3}}
+{"place(carrot)": {"grab(banana)": 0.25, "grab(apple)": 0.25, "grab(sandwich)": 0.25, "pour(bottle)": 0.25}}
+{"place(hot dog)": {"grab(fork)": 0.3, "grab(knife)": 0.3, "grab(spoon)": 0.3, "grab(bottle)": 0.1}}
+{"place(pizza)": {"grab(fork)": 0.35, "grab(knife)": 0.3, "grab(spoon)": 0.25, "grab(bottle)": 0.1}}
+{"place(donut)": {"place(cup)": 0.3, "place(bottle)": 0.3, "place(bowl)": 0.2, "grab(fork)": 0.15, "grab(knife)": 0.05}}
+{"place(cake)": {"grab(wine glass)": 0.25, "grab(cup)": 0.2, "grab(fork)": 0.18, "grab(knife)": 0.15, "grab(spoon)": 0.12, "place(chair)": 0.1}}
+{"place(chair)": {"place(dining table)": 0.6, "place(couch)": 0.4}}
+{"place(couch)": {"place(chair)": 0.4, "place(dining table)": 0.3, "place(potted plant)": 0.2, "place(table)": 0.1}}
+{"place(potted plant)": {"place(chair)": 0.35, "place(couch)": 0.3, "place(dining table)": 0.25, "grab(bottle)": 0.1}}
+{"place(dining table)": {"place(chair)": 0.3, "place(couch)": 0.3, "place(bowl)": 0.2, "place(cup)": 0.2}}
+{"place(laptop)": {"grab(mouse)": 0.35, "grab(keyboard)": 0.3, "place(mouse)": 0.2, "place(keyboard)": 0.15}}
+{"place(mouse)": {"place(laptop)": 0.45, "place(keyboard)": 0.35, "grab(remote)": 0.2}}
+{"place(remote)": {"grab(bottle)": 0.35, "grab(wine glass)": 0.25, "grab(cup)": 0.25, "place(bottle)": 0.15}}
+{"place(keyboard)": {"place(laptop)": 0.4, "place(mouse)": 0.35, "place(cell phone)": 0.25}}
+{"place(cell phone)": {"grab(laptop)": 0.25, "grab(keyboard)": 0.25, "grab(mouse)": 0.25, "grab(remote)": 0.25}}
+{"place(toaster)": {"grab(bottle)": 0.4, "place(cup)": 0.3, "pour(bottle)": 0.2, "press(toaster)": 0.1}}
+{"place(book)": {"place(cup)": 0.4, "grab(bottle)": 0.3, "place(bottle)": 0.2, "grab(cup)": 0.1}}
+{"place(vase)": {"place(bottle)": 0.35, "place(cup)": 0.3, "pour(bottle)": 0.35}}
+{"place(scissors)": {"grab(bottle)": 0.35, "grab(banana)": 0.25, "grab(apple)": 0.25, "place(bottle)": 0.15}}
+{"place(teddy bear)": {"grab(frisbee)": 0.3, "grab(skateboard)": 0.25, "grab(sports ball)": 0.25, "place(bottle)": 0.2}}
+{"place(hair drier)": {"grab(bottle)": 0.6, "place(bottle)": 0.3, "grab(wine glass)": 0.1}}
+{"place(toothbrush)": {"grab(bottle)": 0.4, "grab(wine glass)": 0.3, "grab(cup)": 0.3}}
+{"pull(bench)": {"place(bench)": 1.0}}
+{"pull(backpack)": {"place(backpack)": 0.6, "push(backpack)": 0.3, "grab(bottle)": 0.1}}
+{"pull(umbrella)": {"place(umbrella)": 0.6, "push(umbrella)": 0.2, "press(umbrella)": 0.1, "grab(bottle)": 0.1}}
+{"pull(handbag)": {"place(handbag)": 0.5, "push(handbag)": 0.3, "grab(cell phone)": 0.2}}
+{"pull(tie)": {"place(tie)": 1.0}}
+{"pull(suitcase)": {"place(suitcase)": 1.0}}
+{"pull(frisbee)": {"place(frisbee)": 0.6, "push(frisbee)": 0.2, "grab(sports ball)": 0.2}}
+{"pull(skis)": {"place(skis)": 0.7, "push(skis)": 0.3}}
+{"pull(snowboard)": {"place(snowboard)": 0.5, "push(snowboard)": 0.3, "grab(skis)": 0.2}}
+{"pull(sports ball)": {"place(sports ball)": 0.5, "grab(baseball bat)": 0.3, "grab(baseball glove)": 0.2}}
+{"pull(kite)": {"place(kite)": 1.0}}
+{"pull(baseball bat)": {"grab(sports ball)": 0.6, "grab(baseball glove)": 0.4}}
+{"pull(baseball glove)": {"place(baseball glove)": 0.4, "grab(baseball bat)": 0.35, "grab(sports ball)": 0.25}}
+{"pull(skateboard)": {"place(skateboard)": 1.0}}
+{"pull(tennis racket)": {"place(tennis racket)": 0.6, "grab(sports ball)": 0.3, "grab(chair)": 0.1}}
+{"pull(bottle)": {"place(bottle)": 0.6, "pour(bottle)": 0.4}}
+{"pull(wine glass)": {"place(wine glass)": 0.6, "pour(bottle)": 0.4}}
+{"pull(cup)": {"place(cup)": 0.5, "grab(bottle)": 0.3, "pour(cup)": 0.2}}
+{"pull(fork)": {"place(fork)": 0.6, "grab(spoon)": 0.4}}
+{"pull(knife)": {"place(knife)": 1.0}}
+{"pull(spoon)": {"place(spoon)": 0.5, "pour(cup)": 0.3, "pour(bowl)": 0.2}}
+{"pull(bowl)": {"place(bowl)": 0.6, "grab(bottle)": 0.4}}
+{"pull(banana)": {"place(banana)": 0.5, "grab(apple)": 0.25, "grab(orange)": 0.25}}
+{"pull(apple)": {"place(apple)": 0.6, "grab(banana)": 0.3, "grab(orange)": 0.1}}
+{"pull(sandwich)": {"place(sandwich)": 0.6, "push(sandwich)": 0.4}}
+{"pull(orange)": {"place(orange)": 0.5, "grab(banana)": 0.3, "grab(apple)": 0.2}}
+{"pull(broccoli)": {"place(broccoli)": 0.5, "grab(bowl)": 0.25, "grab(knife)": 0.25}}
+{"pull(carrot)": {"place(carrot)": 0.6, "grab(bowl)": 0.4}}
+{"pull(hot dog)": {"place(hot dog)": 0.6, "grab(fork)": 0.4}}
+{"pull(pizza)": {"place(pizza)": 1.0}}
+{"pull(donut)": {"place(donut)": 1.0}}
+{"pull(cake)": {"place(cake)": 0.5, "place(bowl)": 0.3, "place(cup)": 0.2}}
+{"pull(chair)": {"place(chair)": 1.0}}
+{"pull(couch)": {"place(couch)": 0.6, "push(couch)": 0.4}}
+{"pull(potted plant)": {"place(potted plant)": 1.0}}
+{"pull(dining table)": {"place(dining table)": 0.5, "pull(chair)": 0.3, "pull(couch)": 0.2}}
+{"pull(laptop)": {"place(laptop)": 0.6, "push(laptop)": 0.4}}
+{"pull(mouse)": {"place(mouse)": 0.5, "push(mouse)": 0.3, "press(mouse)": 0.2}}
+{"pull(remote)": {"press(remote)": 0.7, "place(remote)": 0.3}}
+{"pull(keyboard)": {"place(keyboard)": 0.6, "place(laptop)": 0.4}}
+{"pull(cell phone)": {"place(cell phone)": 0.6, "press(cell phone)": 0.4}}
+{"pull(toaster)": {"place(toaster)": 0.7, "push(toaster)": 0.3}}
+{"pull(book)": {"place(book)": 0.6, "push(book)": 0.3, "place(chair)": 0.1}}
+{"pull(vase)": {"place(vase)": 0.7, "push(vase)": 0.3}}
+{"pull(scissors)": {"place(scissors)": 1.0}}
+{"pull(teddy bear)": {"place(teddy bear)": 0.5, "grab(bottle)": 0.3, "push(teddy bear)": 0.2}}
+{"pull(hair drier)": {"place(hair drier)": 0.6, "press(hair drier)": 0.4}}
+{"pull(toothbrush)": {"place(toothbrush)": 1.0}}
+{"press(bench)": {"place(bottle)": 0.3, "grab(bottle)": 0.25, "place(cup)": 0.25, "grab(cup)": 0.2}}
+{"press(backpack)": {"grab(bottle)": 0.3, "grab(cup)": 0.25, "grab(fork)": 0.2, "grab(spoon)": 0.15, "grab(sandwich)": 0.1}}
+{"press(umbrella)": {"place(umbrella)": 0.5, "grab(bottle)": 0.3, "grab(cup)": 0.2}}
+{"press(handbag)": {"place(handbag)": 0.5, "grab(bottle)": 0.3, "grab(cup)": 0.2}}
+{"press(tie)": {"place(tie)": 1.0}}
+{"press(suitcase)": {"place(suitcase)": 0.5, "push(suitcase)": 0.4, "grab(bottle)": 0.1}}
+{"press(frisbee)": {"push(frisbee)": 0.4, "place(frisbee)": 0.35, "grab(sports ball)": 0.25}}
+{"press(skis)": {"place(skis)": 0.6, "push(skis)": 0.4}}
+{"press(snowboard)": {"place(snowboard)": 0.6, "push(snowboard)": 0.3, "grab(skis)": 0.1}}
+{"press(sports ball)": {"place(sports ball)": 0.5, "push(sports ball)": 0.3, "grab(baseball bat)": 0.2}}
+{"press(kite)": {"place(kite)": 0.6, "push(kite)": 0.4}}
+{"press(baseball bat)": {"grab(baseball glove)": 0.4, "grab(sports ball)": 0.35, "push(sports ball)": 0.25}}
+{"press(baseball glove)": {"place(baseball glove)": 0.5, "grab(sports ball)": 0.3, "grab(baseball bat)": 0.2}}
+{"press(skateboard)": {"place(skateboard)": 0.5, "push(skateboard)": 0.3, "pull(skateboard)": 0.2}}
+{"press(tennis racket)": {"place(tennis racket)": 0.5, "grab(sports ball)": 0.5}}
+{"press(bottle)": {"pour(bottle)": 0.7, "place(bottle)": 0.3}}
+{"press(wine glass)": {"pour(wine glass)": 1.0}}
+{"press(cup)": {"pour(cup)": 0.6, "place(cup)": 0.4}}
+{"press(fork)": {"place(fork)": 0.4, "grab(knife)": 0.35, "grab(spoon)": 0.25}}
+{"press(knife)": {"place(knife)": 0.6, "push(knife)": 0.2, "pull(knife)": 0.2}}
+{"press(spoon)": {"place(spoon)": 0.6, "grab(cup)": 0.4}}
+{"press(bowl)": {"pour(bottle)": 0.6, "place(bowl)": 0.4}}
+{"press(banana)": {"place(banana)": 0.6, "push(banana)": 0.4}}
+{"press(apple)": {"place(apple)": 1.0}}
+{"press(sandwich)": {"place(sandwich)": 0.4, "grab(bottle)": 0.3, "grab(cup)": 0.3}}
+{"press(orange)": {"pour(bottle)": 0.25, "pour(wine glass)": 0.25, "pour(cup)": 0.25, "pour(bowl)": 0.25}}
+{"press(broccoli)": {"place(broccoli)": 0.6, "grab(fork)": 0.4}}
+{"press(carrot)": {"place(carrot)": 0.6, "pour(cup)": 0.3, "pour(bowl)": 0.1}}
+{"press(hot dog)": {"place(hot dog)": 0.7, "grab(bottle)": 0.3}}
+{"press(pizza)": {"place(pizza)": 0.7, "push(pizza)": 0.2, "pull(pizza)": 0.1}}
+{"press(donut)": {"place(donut)": 1.0}}
+{"press(cake)": {"place(cake)": 0.5, "pour(bowl)": 0.3, "grab(fork)": 0.2}}
+{"press(chair)": {"push(chair)": 0.5, "pull(chair)": 0.5}}
+{"press(couch)": {"push(couch)": 0.5, "place(chair)": 0.3, "place(table)": 0.2}}
+{"press(potted plant)": {"place(potted plant)": 0.5, "grab(bottle)": 0.3, "push(potted plant)": 0.2}}
+{"press(dining table)": {"place(bottle)": 0.25, "place(wine glass)": 0.25, "place(cup)": 0.25, "place(bowl)": 0.25}}
+{"press(laptop)": {"grab(mouse)": 1.0}}
+{"press(mouse)": {"grab(laptop)": 0.4, "press(keyboard)": 0.3, "grab(keyboard)": 0.3}}
+{"press(remote)": {"place(remote)": 0.5, "grab(laptop)": 0.3, "grab(mouse)": 0.2}}
+{"press(keyboard)": {"grab(mouse)": 0.4, "place(mouse)": 0.3, "push(mouse)": 0.2, "grab(laptop)": 0.1}}
+{"press(cell phone)": {"place(cell phone)": 0.6, "push(cell phone)": 0.4}}
+{"press(toaster)": {"place(bottle)": 0.3, "grab(cup)": 0.3, "place(cup)": 0.2, "grab(bottle)": 0.2}}
+{"press(book)": {"place(book)": 1.0}}
+{"press(vase)": {"place(vase)": 0.6, "place(table)": 0.3, "place(chair)": 0.1}}
+{"press(scissors)": {"place(scissors)": 0.3, "grab(banana)": 0.25, "grab(apple)": 0.2, "grab(carrot)": 0.15, "grab(broccoli)": 0.1}}
+{"press(teddy bear)": {"place(cup)": 0.6, "grab(bottle)": 0.4}}
+{"press(hair drier)": {"place(hair drier)": 1.0}}
+{"press(toothbrush)": {"place(toothbrush)": 0.6, "grab(bottle)": 0.4}}
+{"pour(bottle)": {"place(bottle)": 0.6, "grab(wine glass)": 0.3, "place(wine glass)": 0.1}}
+{"pour(wine glass)": {"place(wine glass)": 0.6, "place(bottle)": 0.3, "grab(fork)": 0.1}}
+{"pour(cup)": {"place(cup)": 0.5, "place(bowl)": 0.3, "grab(bottle)": 0.2}}
+{"pour(bowl)": {"place(bowl)": 0.5, "grab(fork)": 0.3, "grab(spoon)": 0.2}}
+{"push(sandwich)": {"place(bowl)": 0.4, "place(cup)": 0.4, "grab(bottle)": 0.2}}

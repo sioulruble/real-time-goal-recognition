@@ -1,0 +1,676 @@
+current_goal,next_goal,probability
+grab(bench),place(bench),0.6
+grab(bench),push(bench),0.3
+grab(bench),grab(bottle),0.1
+grab(backpack),place(backpack),0.5
+grab(backpack),push(backpack),0.25
+grab(backpack),pull(backpack),0.15
+grab(backpack),grab(bottle),0.1
+grab(umbrella),place(umbrella),0.5
+grab(umbrella),grab(backpack),0.3
+grab(umbrella),push(umbrella),0.2
+grab(handbag),place(handbag),0.5
+grab(handbag),grab(bottle),0.3
+grab(handbag),grab(sandwich),0.2
+grab(tie),place(tie),0.7
+grab(tie),push(tie),0.2
+grab(tie),pull(tie),0.1
+grab(suitcase),place(suitcase),0.6
+grab(suitcase),push(suitcase),0.4
+grab(frisbee),push(frisbee),0.6
+grab(frisbee),place(frisbee),0.4
+grab(skis),place(skis),0.6
+grab(skis),push(skis),0.3
+grab(skis),grab(snowboard),0.1
+grab(snowboard),place(snowboard),0.5
+grab(snowboard),push(snowboard),0.3
+grab(snowboard),grab(skis),0.2
+grab(sports ball),place(sports ball),0.8
+grab(sports ball),push(sports ball),0.2
+grab(kite),place(kite),1.0
+grab(baseball bat),place(baseball bat),0.4
+grab(baseball bat),grab(sports ball),0.35
+grab(baseball bat),grab(baseball glove),0.25
+grab(baseball glove),place(baseball glove),0.4
+grab(baseball glove),grab(baseball bat),0.35
+grab(baseball glove),grab(sports ball),0.25
+grab(skateboard),place(skateboard),0.6
+grab(skateboard),push(skateboard),0.4
+grab(tennis racket),place(tennis racket),0.4
+grab(tennis racket),grab(sports ball),0.35
+grab(tennis racket),push(sports ball),0.25
+grab(bottle),place(bottle),0.6
+grab(bottle),pour(bottle),0.4
+grab(wine glass),place(wine glass),0.6
+grab(wine glass),grab(bottle),0.3
+grab(wine glass),pour(bottle),0.1
+grab(cup),place(cup),0.6
+grab(cup),grab(bottle),0.4
+grab(fork),grab(knife),0.35
+grab(fork),grab(spoon),0.3
+grab(fork),place(fork),0.25
+grab(fork),grab(bowl),0.1
+grab(knife),place(knife),0.4
+grab(knife),grab(banana),0.2
+grab(knife),grab(apple),0.2
+grab(knife),grab(carrot),0.2
+grab(spoon),place(spoon),0.4
+grab(spoon),pour(bottle),0.3
+grab(spoon),place(bowl),0.2
+grab(spoon),place(wine glass),0.1
+grab(bowl),place(bowl),0.5
+grab(bowl),pour(bowl),0.3
+grab(bowl),grab(bottle),0.2
+grab(banana),place(banana),0.6
+grab(banana),grab(cup),0.3
+grab(banana),grab(bottle),0.1
+grab(apple),place(apple),1.0
+grab(sandwich),place(sandwich),0.5
+grab(sandwich),grab(fork),0.3
+grab(sandwich),grab(knife),0.2
+grab(orange),place(orange),0.6
+grab(orange),grab(knife),0.3
+grab(orange),push(orange),0.1
+grab(broccoli),place(broccoli),0.4
+grab(broccoli),grab(fork),0.25
+grab(broccoli),grab(knife),0.2
+grab(broccoli),pour(bottle),0.15
+grab(carrot),place(carrot),0.6
+grab(carrot),grab(bowl),0.4
+grab(hot dog),place(hot dog),0.5
+grab(hot dog),grab(fork),0.3
+grab(hot dog),grab(knife),0.2
+grab(pizza),place(pizza),0.7
+grab(pizza),grab(fork),0.2
+grab(pizza),grab(knife),0.1
+grab(donut),place(donut),0.8
+grab(donut),grab(fork),0.2
+grab(cake),place(cake),0.5
+grab(cake),place(bowl),0.3
+grab(cake),place(cup),0.2
+grab(chair),place(chair),1.0
+grab(couch),place(couch),0.6
+grab(couch),push(couch),0.3
+grab(couch),pull(couch),0.1
+grab(potted plant),place(potted plant),1.0
+grab(dining table),place(dining table),0.6
+grab(dining table),push(dining table),0.3
+grab(dining table),pull(dining table),0.1
+grab(laptop),place(laptop),0.6
+grab(laptop),push(laptop),0.4
+grab(mouse),place(mouse),0.4
+grab(mouse),place(laptop),0.3
+grab(mouse),push(laptop),0.2
+grab(mouse),grab(laptop),0.1
+grab(remote),press(remote),0.7
+grab(remote),place(remote),0.3
+grab(keyboard),place(keyboard),0.5
+grab(keyboard),press(keyboard),0.3
+grab(keyboard),place(laptop),0.2
+grab(cell phone),place(cell phone),0.6
+grab(cell phone),press(cell phone),0.4
+grab(toaster),place(toaster),0.6
+grab(toaster),press(toaster),0.4
+grab(book),place(book),0.6
+grab(book),grab(cup),0.3
+grab(book),push(book),0.1
+grab(vase),place(vase),0.6
+grab(vase),grab(potted plant),0.3
+grab(vase),place(dining table),0.1
+grab(scissors),place(scissors),0.6
+grab(scissors),grab(bottle),0.2
+grab(scissors),grab(cup),0.1
+grab(scissors),grab(wine glass),0.1
+grab(teddy bear),place(teddy bear),1.0
+grab(hair drier),place(hair drier),0.6
+grab(hair drier),press(hair drier),0.3
+grab(hair drier),push(hair, drier),0.1
+grab(toothbrush),place(toothbrush),0.5
+grab(toothbrush),grab(bottle),0.3
+grab(toothbrush),push(toothbrush),0.15
+grab(toothbrush),pull(toothbrush),0.05
+push(bench),place(bench),0.6
+push(bench),push(chair),0.2
+push(bench),push(couch),0.1
+push(bench),push(dining table),0.1
+push(backpack),place(backpack),0.7
+push(backpack),grab(bottle),0.3
+push(umbrella),place(umbrella),0.6
+push(umbrella),grab(bottle),0.2
+push(umbrella),push(bottle),0.1
+push(umbrella),place(bottle),0.1
+push(handbag),place(handbag),1.0
+push(tie),place(tie),1.0
+push(suitcase),place(suitcase),0.7
+push(suitcase),push(bottle),0.2
+push(suitcase),grab(bottle),0.1
+push(frisbee),place(frisbee),0.5
+push(frisbee),push(sports ball),0.3
+push(frisbee),grab(sports ball),0.2
+push(skis),place(skis),0.4
+push(skis),push(snowboard),0.3
+push(skis),push(sports ball),0.2
+push(skis),push(ski boot),0.1
+push(snowboard),place(snowboard),0.5
+push(snowboard),push(skis),0.3
+push(snowboard),push(sports ball),0.2
+push(sports ball),place(sports ball),0.6
+push(sports ball),push(tennis racket),0.4
+push(kite),place(kite),0.5
+push(kite),push(frisbee),0.25
+push(kite),push(sports ball),0.15
+push(kite),push(skis),0.1
+push(baseball bat),place(baseball bat),0.4
+push(baseball bat),grab(baseball),0.35
+push(baseball bat),place(baseball glove),0.25
+push(baseball glove),place(baseball glove),0.4
+push(baseball glove),grab(baseball bat),0.35
+push(baseball glove),push(baseball bat),0.25
+push(skateboard),place(skateboard),0.4
+push(skateboard),push(sports ball),0.3
+push(skateboard),push(frisbee),0.2
+push(skateboard),push(skis),0.1
+push(tennis racket),place(tennis racket),0.5
+push(tennis racket),grab(sports ball),0.3
+push(tennis racket),push(sports ball),0.2
+push(bottle),place(bottle),0.5
+push(bottle),pour(bottle),0.4
+push(bottle),place(wine glass),0.1
+push(wine glass),place(wine glass),0.6
+push(wine glass),grab(bottle),0.4
+push(cup),place(cup),0.6
+push(cup),pour(bottle),0.3
+push(cup),grab(bottle),0.1
+push(fork),place(fork),0.6
+push(fork),pour(bottle),0.3
+push(fork),grab(bottle),0.1
+push(knife),place(knife),0.4
+push(knife),push(bottle),0.3
+push(knife),grab(banana),0.2
+push(knife),push(bowl),0.1
+push(spoon),place(spoon),0.45
+push(spoon),place(bowl),0.25
+push(spoon),place(fork),0.2
+push(spoon),place(cup),0.1
+push(bowl),place(bowl),1.0
+push(banana),place(banana),0.5
+push(banana),push(apple),0.3
+push(banana),push(orange),0.2
+push(apple),place(apple),0.5
+push(apple),grab(banana),0.3
+push(apple),grab(bottle),0.2
+push(orange),place(orange),0.6
+push(orange),grab(banana),0.2
+push(orange),grab(apple),0.15
+push(orange),grab(sandwich),0.05
+push(broccoli),place(bowl),0.6
+push(broccoli),place(cup),0.2
+push(broccoli),place(dining table),0.2
+push(carrot),place(carrot),0.6
+push(carrot),grab(bowl),0.3
+push(carrot),grab(knife),0.1
+push(hot dog),place(hot dog),0.6
+push(hot dog),grab(bottle),0.4
+push(pizza),place(pizza),1.0
+push(donut),place(donut),0.7
+push(donut),grab(cup),0.3
+push(cake),place(cake),0.6
+push(cake),grab(fork),0.2
+push(cake),grab(spoon),0.1
+push(cake),pour(cup),0.05
+push(chair),place(chair),0.5
+push(chair),push(dining table),0.3
+push(chair),push(couch),0.2
+push(couch),place(couch),0.4
+push(couch),push(chair),0.3
+push(couch),push(table),0.2
+push(couch),place(chair),0.1
+push(potted plant),place(potted plant),0.6
+push(potted plant),grab(bottle),0.3
+push(potted plant),push(chair),0.1
+push(dining table),place(bottle),0.3
+push(dining table),place(wine glass),0.25
+push(dining table),push(chair),0.25
+push(dining table),place(cup),0.2
+push(laptop),place(laptop),0.6
+push(laptop),grab(mouse),0.25
+push(laptop),grab(keyboard),0.15
+push(mouse),place(mouse),0.5
+push(mouse),grab(keyboard),0.3
+push(mouse),place(laptop),0.2
+push(remote),place(remote),1.0
+push(keyboard),place(keyboard),0.5
+push(keyboard),grab(mouse),0.25
+push(keyboard),grab(laptop),0.25
+push(cell phone),place(cell phone),0.6
+push(cell phone),press(cell phone),0.4
+push(toaster),place(toaster),1.0
+push(book),place(book),0.5
+push(book),grab(bottle),0.3
+push(book),grab(cup),0.2
+push(vase),place(vase),0.7
+push(vase),place(bottle),0.2
+push(vase),place(wine glass),0.1
+push(scissors),place(scissors),1.0
+push(teddy bear),place(teddy bear),1.0
+push(hair drier),place(hair drier),1.0
+push(toothbrush),push(bottle),0.5
+push(toothbrush),grab(bottle),0.5
+place(bench),place(chair),0.4
+place(bench),place(couch),0.3
+place(bench),place(dining table),0.2
+place(bench),place(potted plant),0.1
+place(backpack),grab(bottle),0.3
+place(backpack),grab(sports ball),0.25
+place(backpack),grab(sandwich),0.2
+place(backpack),grab(banana),0.25
+place(umbrella),grab(backpack),0.35
+place(umbrella),grab(bottle),0.3
+place(umbrella),place(bottle),0.25
+place(umbrella),push(bench),0.1
+place(handbag),grab(bottle),0.35
+place(handbag),grab(cup),0.25
+place(handbag),place(chair),0.25
+place(handbag),place(couch),0.15
+place(tie),grab(bottle),0.35
+place(tie),grab(wine glass),0.25
+place(tie),grab(cup),0.25
+place(tie),push(chair),0.15
+place(suitcase),grab(bottle),0.4
+place(suitcase),grab(wine glass),0.3
+place(suitcase),grab(cup),0.2
+place(suitcase),grab(banana),0.1
+place(frisbee),push(sports ball),0.4
+place(frisbee),grab(sports ball),0.35
+place(frisbee),place(sports ball),0.25
+place(skis),grab(snowboard),0.5
+place(skis),place(snowboard),0.3
+place(skis),push(snowboard),0.2
+place(snowboard),place(ski),0.5
+place(snowboard),push(ski),0.3
+place(snowboard),place(bottle),0.2
+place(sports ball),grab(tennis racket),0.3
+place(sports ball),grab(baseball bat),0.3
+place(sports ball),grab(skateboard),0.2
+place(sports ball),push(sports ball),0.2
+place(kite),grab(frisbee),0.4
+place(kite),push(sports ball),0.35
+place(kite),place(sports ball),0.25
+place(baseball bat),place(baseball glove),0.5
+place(baseball bat),grab(baseball),0.3
+place(baseball bat),place(sports ball),0.2
+place(baseball glove),grab(baseball bat),0.4
+place(baseball glove),grab(sports ball),0.35
+place(baseball glove),grab(baseball),0.25
+place(skateboard),grab(sports ball),0.4
+place(skateboard),grab(bottle),0.35
+place(skateboard),push(skateboard),0.25
+place(tennis racket),grab(sports ball),0.6
+place(tennis racket),place(sports ball),0.3
+place(tennis racket),push(sports ball),0.1
+place(bottle),place(wine glass),0.4
+place(bottle),place(cup),0.4
+place(bottle),pour(bottle),0.2
+place(wine glass),grab(bottle),0.4
+place(wine glass),place(bottle),0.3
+place(wine glass),place(cup),0.2
+place(wine glass),pour(bottle),0.1
+place(cup),place(cup),0.6
+place(cup),grab(bottle),0.4
+place(fork),place(bowl),0.3
+place(fork),place(cup),0.3
+place(fork),grab(knife),0.2
+place(fork),grab(spoon),0.2
+place(knife),grab(fork),0.35
+place(knife),grab(spoon),0.35
+place(knife),place(cup),0.15
+place(knife),place(bowl),0.15
+place(spoon),place(fork),0.35
+place(spoon),place(knife),0.3
+place(spoon),place(bowl),0.25
+place(spoon),place(cup),0.1
+place(bowl),grab(cup),0.35
+place(bowl),grab(spoon),0.25
+place(bowl),place(fork),0.25
+place(bowl),pour(bottle),0.15
+place(banana),place(bowl),0.5
+place(banana),grab(knife),0.3
+place(banana),place(cup),0.2
+place(apple),grab(banana),0.5
+place(apple),grab(orange),0.3
+place(apple),grab(cup),0.2
+place(sandwich),grab(fork),0.4
+place(sandwich),grab(knife),0.3
+place(sandwich),grab(spoon),0.3
+place(orange),grab(fork),0.4
+place(orange),grab(knife),0.3
+place(orange),place(bottle),0.2
+place(orange),place(wine glass),0.1
+place(broccoli),place(banana),0.25
+place(broccoli),place(apple),0.25
+place(broccoli),place(sandwich),0.2
+place(broccoli),grab(fork),0.3
+place(carrot),grab(banana),0.25
+place(carrot),grab(apple),0.25
+place(carrot),grab(sandwich),0.25
+place(carrot),pour(bottle),0.25
+place(hot dog),grab(fork),0.3
+place(hot dog),grab(knife),0.3
+place(hot dog),grab(spoon),0.3
+place(hot dog),grab(bottle),0.1
+place(pizza),grab(fork),0.35
+place(pizza),grab(knife),0.3
+place(pizza),grab(spoon),0.25
+place(pizza),grab(bottle),0.1
+place(donut),place(cup),0.3
+place(donut),place(bottle),0.3
+place(donut),place(bowl),0.2
+place(donut),grab(fork),0.15
+place(donut),grab(knife),0.05
+place(cake),grab(wine glass),0.25
+place(cake),grab(cup),0.2
+place(cake),grab(fork),0.18
+place(cake),grab(knife),0.15
+place(cake),grab(spoon),0.12
+place(cake),place(chair),0.1
+place(chair),place(dining table),0.6
+place(chair),place(couch),0.4
+place(couch),place(chair),0.4
+place(couch),place(dining table),0.3
+place(couch),place(potted plant),0.2
+place(couch),place(table),0.1
+place(potted plant),place(chair),0.35
+place(potted plant),place(couch),0.3
+place(potted plant),place(dining table),0.25
+place(potted plant),grab(bottle),0.1
+place(dining table),place(chair),0.3
+place(dining table),place(couch),0.3
+place(dining table),place(bowl),0.2
+place(dining table),place(cup),0.2
+place(laptop),grab(mouse),0.35
+place(laptop),grab(keyboard),0.3
+place(laptop),place(mouse),0.2
+place(laptop),place(keyboard),0.15
+place(mouse),place(laptop),0.45
+place(mouse),place(keyboard),0.35
+place(mouse),grab(remote),0.2
+place(remote),grab(bottle),0.35
+place(remote),grab(wine glass),0.25
+place(remote),grab(cup),0.25
+place(remote),place(bottle),0.15
+place(keyboard),place(laptop),0.4
+place(keyboard),place(mouse),0.35
+place(keyboard),place(cell phone),0.25
+place(cell phone),grab(laptop),0.25
+place(cell phone),grab(keyboard),0.25
+place(cell phone),grab(mouse),0.25
+place(cell phone),grab(remote),0.25
+place(toaster),grab(bottle),0.4
+place(toaster),place(cup),0.3
+place(toaster),pour(bottle),0.2
+place(toaster),press(toaster),0.1
+place(book),place(cup),0.4
+place(book),grab(bottle),0.3
+place(book),place(bottle),0.2
+place(book),grab(cup),0.1
+place(vase),place(bottle),0.35
+place(vase),place(cup),0.3
+place(vase),pour(bottle),0.35
+place(scissors),grab(bottle),0.35
+place(scissors),grab(banana),0.25
+place(scissors),grab(apple),0.25
+place(scissors),place(bottle),0.15
+place(teddy bear),grab(frisbee),0.3
+place(teddy bear),grab(skateboard),0.25
+place(teddy bear),grab(sports ball),0.25
+place(teddy bear),place(bottle),0.2
+place(hair drier),grab(bottle),0.6
+place(hair drier),place(bottle),0.3
+place(hair drier),grab(wine glass),0.1
+place(toothbrush),grab(bottle),0.4
+place(toothbrush),grab(wine glass),0.3
+place(toothbrush),grab(cup),0.3
+pull(bench),place(bench),1.0
+pull(backpack),place(backpack),0.6
+pull(backpack),push(backpack),0.3
+pull(backpack),grab(bottle),0.1
+pull(umbrella),place(umbrella),0.6
+pull(umbrella),push(umbrella),0.2
+pull(umbrella),press(umbrella),0.1
+pull(umbrella),grab(bottle),0.1
+pull(handbag),place(handbag),0.5
+pull(handbag),push(handbag),0.3
+pull(handbag),grab(cell phone),0.2
+pull(tie),place(tie),1.0
+pull(suitcase),place(suitcase),1.0
+pull(frisbee),place(frisbee),0.6
+pull(frisbee),push(frisbee),0.2
+pull(frisbee),grab(sports ball),0.2
+pull(skis),place(skis),0.7
+pull(skis),push(skis),0.3
+pull(snowboard),place(snowboard),0.5
+pull(snowboard),push(snowboard),0.3
+pull(snowboard),grab(skis),0.2
+pull(sports ball),place(sports ball),0.5
+pull(sports ball),grab(baseball bat),0.3
+pull(sports ball),grab(baseball glove),0.2
+pull(kite),place(kite),1.0
+pull(baseball bat),grab(sports ball),0.6
+pull(baseball bat),grab(baseball glove),0.4
+pull(baseball glove),place(baseball glove),0.4
+pull(baseball glove),grab(baseball bat),0.35
+pull(baseball glove),grab(sports ball),0.25
+pull(skateboard),place(skateboard),1.0
+pull(tennis racket),place(tennis racket),0.6
+pull(tennis racket),grab(sports ball),0.3
+pull(tennis racket),grab(chair),0.1
+pull(bottle),place(bottle),0.6
+pull(bottle),pour(bottle),0.4
+pull(wine glass),place(wine glass),0.6
+pull(wine glass),pour(bottle),0.4
+pull(cup),place(cup),0.5
+pull(cup),grab(bottle),0.3
+pull(cup),pour(cup),0.2
+pull(fork),place(fork),0.6
+pull(fork),grab(spoon),0.4
+pull(knife),place(knife),1.0
+pull(spoon),place(spoon),0.5
+pull(spoon),pour(cup),0.3
+pull(spoon),pour(bowl),0.2
+pull(bowl),place(bowl),0.6
+pull(bowl),grab(bottle),0.4
+pull(banana),place(banana),0.5
+pull(banana),grab(apple),0.25
+pull(banana),grab(orange),0.25
+pull(apple),place(apple),0.6
+pull(apple),grab(banana),0.3
+pull(apple),grab(orange),0.1
+pull(sandwich),place(sandwich),0.6
+pull(sandwich),push(sandwich),0.4
+pull(orange),place(orange),0.5
+pull(orange),grab(banana),0.3
+pull(orange),grab(apple),0.2
+pull(broccoli),place(broccoli),0.5
+pull(broccoli),grab(bowl),0.25
+pull(broccoli),grab(knife),0.25
+pull(carrot),place(carrot),0.6
+pull(carrot),grab(bowl),0.4
+pull(hot dog),place(hot dog),0.6
+pull(hot dog),grab(fork),0.4
+pull(pizza),place(pizza),1.0
+pull(donut),place(donut),1.0
+pull(cake),place(cake),0.5
+pull(cake),place(bowl),0.3
+pull(cake),place(cup),0.2
+pull(chair),place(chair),1.0
+pull(couch),place(couch),0.6
+pull(couch),push(couch),0.4
+pull(potted plant),place(potted plant),1.0
+pull(dining table),place(dining table),0.5
+pull(dining table),pull(chair),0.3
+pull(dining table),pull(couch),0.2
+pull(laptop),place(laptop),0.6
+pull(laptop),push(laptop),0.4
+pull(mouse),place(mouse),0.5
+pull(mouse),push(mouse),0.3
+pull(mouse),press(mouse),0.2
+pull(remote),press(remote),0.7
+pull(remote),place(remote),0.3
+pull(keyboard),place(keyboard),0.6
+pull(keyboard),place(laptop),0.4
+pull(cell phone),place(cell phone),0.6
+pull(cell phone),press(cell phone),0.4
+pull(toaster),place(toaster),0.7
+pull(toaster),push(toaster),0.3
+pull(book),place(book),0.6
+pull(book),push(book),0.3
+pull(book),place(chair),0.1
+pull(vase),place(vase),0.7
+pull(vase),push(vase),0.3
+pull(scissors),place(scissors),1.0
+pull(teddy bear),place(teddy bear),0.5
+pull(teddy bear),grab(bottle),0.3
+pull(teddy bear),push(teddy bear),0.2
+pull(hair drier),place(hair drier),0.6
+pull(hair drier),press(hair drier),0.4
+pull(toothbrush),place(toothbrush),1.0
+press(bench),place(bottle),0.3
+press(bench),grab(bottle),0.25
+press(bench),place(cup),0.25
+press(bench),grab(cup),0.2
+press(backpack),grab(bottle),0.3
+press(backpack),grab(cup),0.25
+press(backpack),grab(fork),0.2
+press(backpack),grab(spoon),0.15
+press(backpack),grab(sandwich),0.1
+press(umbrella),place(umbrella),0.5
+press(umbrella),grab(bottle),0.3
+press(umbrella),grab(cup),0.2
+press(handbag),place(handbag),0.5
+press(handbag),grab(bottle),0.3
+press(handbag),grab(cup),0.2
+press(tie),place(tie),1.0
+press(suitcase),place(suitcase),0.5
+press(suitcase),push(suitcase),0.4
+press(suitcase),grab(bottle),0.1
+press(frisbee),push(frisbee),0.4
+press(frisbee),place(frisbee),0.35
+press(frisbee),grab(sports ball),0.25
+press(skis),place(skis),0.6
+press(skis),push(skis),0.4
+press(snowboard),place(snowboard),0.6
+press(snowboard),push(snowboard),0.3
+press(snowboard),grab(skis),0.1
+press(sports ball),place(sports ball),0.5
+press(sports ball),push(sports ball),0.3
+press(sports ball),grab(baseball bat),0.2
+press(kite),place(kite),0.6
+press(kite),push(kite),0.4
+press(baseball bat),grab(baseball glove),0.4
+press(baseball bat),grab(sports ball),0.35
+press(baseball bat),push(sports ball),0.25
+press(baseball glove),place(baseball glove),0.5
+press(baseball glove),grab(sports ball),0.3
+press(baseball glove),grab(baseball bat),0.2
+press(skateboard),place(skateboard),0.5
+press(skateboard),push(skateboard),0.3
+press(skateboard),pull(skateboard),0.2
+press(tennis racket),place(tennis racket),0.5
+press(tennis racket),grab(sports ball),0.5
+press(bottle),pour(bottle),0.7
+press(bottle),place(bottle),0.3
+press(wine glass),pour(wine glass),1.0
+press(cup),pour(cup),0.6
+press(cup),place(cup),0.4
+press(fork),place(fork),0.4
+press(fork),grab(knife),0.35
+press(fork),grab(spoon),0.25
+press(knife),place(knife),0.6
+press(knife),push(knife),0.2
+press(knife),pull(knife),0.2
+press(spoon),place(spoon),0.6
+press(spoon),grab(cup),0.4
+press(bowl),pour(bottle),0.6
+press(bowl),place(bowl),0.4
+press(banana),place(banana),0.6
+press(banana),push(banana),0.4
+press(apple),place(apple),1.0
+press(sandwich),place(sandwich),0.4
+press(sandwich),grab(bottle),0.3
+press(sandwich),grab(cup),0.3
+press(orange),pour(bottle),0.25
+press(orange),pour(wine glass),0.25
+press(orange),pour(cup),0.25
+press(orange),pour(bowl),0.25
+press(broccoli),place(broccoli),0.6
+press(broccoli),grab(fork),0.4
+press(carrot),place(carrot),0.6
+press(carrot),pour(cup),0.3
+press(carrot),pour(bowl),0.1
+press(hot dog),place(hot dog),0.7
+press(hot dog),grab(bottle),0.3
+press(pizza),place(pizza),0.7
+press(pizza),push(pizza),0.2
+press(pizza),pull(pizza),0.1
+press(donut),place(donut),1.0
+press(cake),place(cake),0.5
+press(cake),pour(bowl),0.3
+press(cake),grab(fork),0.2
+press(chair),push(chair),0.5
+press(chair),pull(chair),0.5
+press(couch),push(couch),0.5
+press(couch),place(chair),0.3
+press(couch),place(table),0.2
+press(potted plant),place(potted plant),0.5
+press(potted plant),grab(bottle),0.3
+press(potted plant),push(potted plant),0.2
+press(dining table),place(bottle),0.25
+press(dining table),place(wine glass),0.25
+press(dining table),place(cup),0.25
+press(dining table),place(bowl),0.25
+press(laptop),grab(mouse),1.0
+press(mouse),grab(laptop),0.4
+press(mouse),press(keyboard),0.3
+press(mouse),grab(keyboard),0.3
+press(remote),place(remote),0.5
+press(remote),grab(laptop),0.3
+press(remote),grab(mouse),0.2
+press(keyboard),grab(mouse),0.4
+press(keyboard),place(mouse),0.3
+press(keyboard),push(mouse),0.2
+press(keyboard),grab(laptop),0.1
+press(cell phone),place(cell phone),0.6
+press(cell phone),push(cell phone),0.4
+press(toaster),place(bottle),0.3
+press(toaster),grab(cup),0.3
+press(toaster),place(cup),0.2
+press(toaster),grab(bottle),0.2
+press(book),place(book),1.0
+press(vase),place(vase),0.6
+press(vase),place(table),0.3
+press(vase),place(chair),0.1
+press(scissors),place(scissors),0.3
+press(scissors),grab(banana),0.25
+press(scissors),grab(apple),0.2
+press(scissors),grab(carrot),0.15
+press(scissors),grab(broccoli),0.1
+press(teddy bear),place(cup),0.6
+press(teddy bear),grab(bottle),0.4
+press(hair drier),place(hair drier),1.0
+press(toothbrush),place(toothbrush),0.6
+press(toothbrush),grab(bottle),0.4
+pour(bottle),place(bottle),0.6
+pour(bottle),grab(wine glass),0.3
+pour(bottle),place(wine glass),0.1
+pour(wine glass),place(wine glass),0.6
+pour(wine glass),place(bottle),0.3
+pour(wine glass),grab(fork),0.1
+pour(cup),place(cup),0.5
+pour(cup),place(bowl),0.3
+pour(cup),grab(bottle),0.2
+pour(bowl),place(bowl),0.5
+pour(bowl),grab(fork),0.3
+pour(bowl),grab(spoon),0.2
+push(sandwich),place(bowl),0.4
+push(sandwich),place(cup),0.4
+push(sandwich),grab(bottle),0.2
