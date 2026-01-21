@@ -123,21 +123,31 @@ def build_all_possible_goals(list_of_actions, list_of_objects):
             all_possible_goals.append(goal)
     return all_possible_goals
 
-def compute_3d_position_from_mask(mask, point_cloud):
-    ys, xs = np.where(mask== 1)  
-    depth_points = []
-    H, W = point_cloud.shape[:2]
-
-    for y, x in zip(ys, xs):
-        if not (0 <= y < H and 0 <= x < W):
-            continue
-        X, Y, Z = point_cloud[y, x, :]
-        if Z == 0:
-            continue
-        depth_points.append((X, Y, Z))
-    if not depth_points:
+def compute_3d_position_from_mask(mask, camera, depth):
+    # pixels du masque
+    ys, xs = np.where(mask > 0)
+    if len(xs) == 0:
         return None
-    return np.median(depth_points, axis=0)
+
+    Z = depth[ys, xs].astype(np.float32)
+    valid = Z > 0
+    if not np.any(valid):
+        return None
+
+    xs = xs[valid]
+    ys = ys[valid]
+    Z  = Z[valid]
+
+    fx = camera.intrinsics[4]
+    fy = camera.intrinsics[5]
+    cx = camera.intrinsics[6]
+    cy = camera.intrinsics[7]
+
+    X = (xs - cx) * Z / fx
+    Y = (ys - cy) * Z / fy
+
+    points = np.stack([X, Y, Z], axis=1)
+    return np.median(points, axis=0)
 
 def threaded_VLM_wrapper(processorLL, model_name, caption, frame, objects, timing, result_container, list_of_actions):
     result = processorLL.VLM_process_func(model_name, caption, frame, objects, list_of_actions, timing)
@@ -225,11 +235,9 @@ def moving_closer(dict_3d_positions, hand_position_3d, last_distance):
 
 def save_last_distance(dict_3d_positions, hand_position_3d):
     last_distance=dict_3d_positions.copy()
-    print(f"test print distance 3d avant", last_distance)
     for name, pos in last_distance.items():
         distance = np.linalg.norm(pos -hand_position_3d)
         last_distance[name]= distance
-    print(f"test print distance 3d apres", last_distance)
     return last_distance
 
 def ID_to_text(ID, mapping_info):
@@ -376,8 +384,8 @@ def display_goal_estimation(frame, goals_beliefs, object_boxes, previous_object_
 
     return object_goals
 
-def online_goal_estimation(camera, goals_beliefs, list_of_bounding_boxes, gaze_finalvalue):
-    frame = camera.get_rgb_frame()
+def online_goal_estimation(camera, image, goals_beliefs, list_of_bounding_boxes, gaze_finalvalue):
+    frame = image 
     if frame is None:
         return {}
 

@@ -127,83 +127,6 @@ def init_orbbec():
     return pipeline, temporal_filter, align_filter, (fx, fy, cx, cy, fx_scaled, fy_scaled, cx_scaled, cy_scaled)
 
 
-def get_frames(
-    pipeline,
-    temporal_filter=None,
-    align_filter=None,
-    intrinsics=None,
-    min_depth=20,
-    max_depth=10000
-):
-    frames = pipeline.wait_for_frames(100)
-    if frames is None:
-        return None, None, None , None
-
-    # Align depth to color
-    if align_filter:
-        frames = align_filter.process(frames)
-    if frames is None:
-        return None, None, None, None
-
-    frames = frames.as_frame_set()
-
-    depth_frame = frames.get_depth_frame()
-    color_frame = frames.get_color_frame()
-    if depth_frame is None or color_frame is None:
-        return None, None, None, None
-
-    # --- RGB ---
-    rgb = frame_to_bgr_image(color_frame)
-
-    # --- Depth ---
-    depth_data = np.frombuffer(depth_frame.get_data(), dtype=np.uint16)
-
-    depth_data = depth_data.reshape((depth_frame.get_height(), depth_frame.get_width()))
-    depth_data = depth_data.astype(np.float32) * depth_frame.get_depth_scale()
-    depth_data = np.where((depth_data > min_depth) & (depth_data < max_depth), depth_data, 0)
-
-    # --- Filtre temporel ---
-    if temporal_filter:
-        depth_data = temporal_filter.process(depth_data)
-    depth = depth_data.astype(np.uint16)
-
-    if temporal_filter:
-        depth = temporal_filter.process(depth)
-
-    depth = depth.astype(np.uint16)
-    depth = cv2.resize(depth, (rgb.shape[1], rgb.shape[0]), interpolation=cv2.INTER_NEAREST)
-
-    depth_3Dpoints = np.zeros((depth.shape[0], depth.shape[1], 3), dtype=np.float32)
-
-    
-
-    # --- PointCloud-like API ---
-    fx = intrinsics[0]
-    fy = intrinsics[1]
-    cx = intrinsics[2]
-    cy = intrinsics[3]
-    fx_scaled = intrinsics[4]
-    fy_scaled = intrinsics[5]
-    cx_scaled = intrinsics[6]
-    cy_scaled = intrinsics[7]
-    H, W = depth.shape[:2]
-    for y in range(H):
-        for x in range(W):
-            depth_value = depth[y, x]
-            if depth_value == 0:
-                continue
-            Z = depth_value 
-            X = (x - cx_scaled) * Z / fx_scaled
-            Y = (y - cy_scaled) * Z / fy_scaled
-            depth_3Dpoints[y, x] = (X, Y, Z)
-    pc_like = PointCloudLike(depth_3Dpoints, {
-        "fx": fx_scaled,
-        "fy": fy_scaled,
-        "cx": cx_scaled,
-        "cy": cy_scaled
-    })
-
-    return rgb, depth, pc_like, depth_3Dpoints
 
 
 def object_xyz_from_mask(mask, depth, pc_like, min_points=50):
@@ -262,23 +185,25 @@ class OrbbecPlugin:
         # cache last frames
         self._last_color = None
         self._last_depth = None
-        self._pc_like = None
+        self._last_3d = None
         self._frame_lock = threading.Lock()
 
     def _update_frames(self):
-        rgb, depth, pc_like, depth_3Dpoints = get_frames(
-            self.pipeline,
-            temporal_filter=self.temporal_filter,
-            align_filter=self.align_filter,
-            intrinsics=self.intrinsics,
-            min_depth=20,
-            max_depth=10000
-        )
+        rgb, depth = self.get_frames(min_depth=20, max_depth=10000)
         with self._frame_lock:
             self._last_color = rgb
             self._last_depth = depth
-            self._pc_like = pc_like
-            self._depth_3Dpoints = depth_3Dpoints
+            if depth is not None:
+                self._depth_3Dpoints = self.depth_to_3dpoints()
+                self._pc_like = PointCloudLike(depth, {
+                    "fx": self.fx_scaled,
+                    "fy": self.fy_scaled,
+                    "cx": self.cx_scaled,
+                    "cy": self.cy_scaled
+                })
+            else:
+                self._pc_like = None
+                self._depth_3Dpoints = None
 
     def retrieve_image(self, mat, view=None):
         """
@@ -418,13 +343,6 @@ class OrbbecPlugin:
                 return None
             return self._last_depth.copy()
 
-    def get_pointcloud_like(self):
-        """
-        Retourne l'objet PointCloud-like (PointCloudLike) utilisé pour get_xyz(u,v).
-        """
-        self._update_frames()
-        with self._frame_lock:
-            return self._pc_like
 
     def get_3Dpoints(self):
         """
@@ -432,4 +350,100 @@ class OrbbecPlugin:
         """
         self._update_frames()
         with self._frame_lock:
-            return self._depth_3Dpoints if hasattr(self, '_depth_3Dpoints') else None   
+            return self._depth_3Dpoints if hasattr(self, '_depth_3Dpoints') else None
+        
+    def depth_to_xyz(self, u, v):
+        if (
+            u < 0 or v < 0 or
+            v >= self.depth.shape[0] or
+            u >= self.depth.shape[1]
+        ):
+            return None
+
+        Z = self.depth[v, u]
+        if Z <= 0:
+            return None
+
+        fx_scaled, fy_scaled = self.intrinsics[4], self.intrinsics[5]
+        cx_scaled, cy_scaled = self.intrinsics[6], self.intrinsics[7]
+
+        X = (u - cx_scaled) * Z / fx_scaled
+        Y = (v - cy_scaled) * Z / fy_scaled
+
+        return X, Y, Z
+
+    def depth_to_3dpoints(self):
+        H, W = self.depth.shape
+
+        fx = self.intrinsics[4]
+        fy = self.intrinsics[5]
+        cx = self.intrinsics[6]
+        cy = self.intrinsics[7]
+
+        # grille pixel
+        xs, ys = np.meshgrid(
+            np.arange(W),
+            np.arange(H)
+        )
+
+        Z = self.depth.astype(np.float32)
+        mask = Z > 0
+
+        X = (xs - cx) * Z / fx
+        Y = (ys - cy) * Z / fy
+
+        depth_3dpoints = np.zeros((H, W, 3), dtype=np.float32)
+        depth_3dpoints[..., 0] = X
+        depth_3dpoints[..., 1] = Y
+        depth_3dpoints[..., 2] = Z
+
+        depth_3dpoints[~mask] = 0.0
+
+        return depth_3dpoints
+
+        
+    def get_frames(self, min_depth=20, max_depth=10000):
+        """
+        Instance method version of the previous get_frames function.
+        Returns: (rgb_bgr, depth_uint16, pc_like, depth_3Dpoints)
+        """
+        frames = self.pipeline.wait_for_frames(100)
+        if frames is None:
+            return None, None
+
+        # Align depth to color
+        if self.align_filter:
+            frames = self.align_filter.process(frames)
+        if frames is None:
+            return None, None
+
+        frames = frames.as_frame_set()
+
+        depth_frame = frames.get_depth_frame()
+        color_frame = frames.get_color_frame()
+        if depth_frame is None or color_frame is None:
+            return None, None
+
+        # --- RGB ---
+        rgb = frame_to_bgr_image(color_frame)
+
+        # --- Depth ---
+        depth_data = np.frombuffer(depth_frame.get_data(), dtype=np.uint16)
+        depth_data = depth_data.reshape((depth_frame.get_height(), depth_frame.get_width()))
+        depth_data = depth_data.astype(np.float32) * depth_frame.get_depth_scale()
+        depth_data = np.where((depth_data > min_depth) & (depth_data < max_depth), depth_data, 0)
+
+        # --- Filtre temporel ---
+        if self.temporal_filter:
+            depth_data = self.temporal_filter.process(depth_data)
+        depth = depth_data.astype(np.uint16)
+
+        if self.temporal_filter:
+            depth = self.temporal_filter.process(depth)
+
+        depth = depth.astype(np.uint16)
+        depth = cv2.resize(depth, (rgb.shape[1], rgb.shape[0]), interpolation=cv2.INTER_NEAREST)
+        self.depth = depth
+        self.rgb = rgb
+
+        return rgb, depth
