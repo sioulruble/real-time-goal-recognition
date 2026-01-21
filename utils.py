@@ -1,12 +1,42 @@
-import pyzed.sl as sl
+# === Imports ===
+
 import cv2
 import time
+import random
+import torch
 import numpy as np
+from PIL import Image
+from datetime import datetime, timedelta
+from collections import defaultdict, deque
+from multiprocessing import Process, Manager
+import threading
 import re
 import json
 import csv
-import open3d as o3d
+
+# === External Modules ===
+from orbbec.orbbec_api import OrbbecPlugin as pluginOrbbec
+from inference.HMM import HMM
+from inference.VLM import VLMProcessor
+from langchain_ollama import OllamaLLM as Ollama
+from sentence_transformers import SentenceTransformer 
+from inference.similaritymodel import SentenceSimilarityModel
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
+from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline, BitsAndBytesConfig
+from langchain_huggingface import HuggingFacePipeline
+
+import cv2
+import time
 from collections import defaultdict
+from ultralytics import YOLO
+import os
+import open3d as o3d
+from inference.HMM_grab import GrabHMM
+from inference.Hand_position import HandPositionReader
+from inference.receive_gaze import EyesTracking
+
+from utils import *
 
 
 def load_object_types(csv_path="goals_type.csv"):
@@ -19,9 +49,8 @@ def load_object_types(csv_path="goals_type.csv"):
             mapping[obj].append(typ)
     return mapping
 
-OBJECT_TYPES = load_object_types("goals_type.csv")
 
-def group_by_type(objects_dict):
+def group_by_type(objects_dict, OBJECT_TYPES):
     grouped = defaultdict(list)
     for name in objects_dict.keys():
         if name in OBJECT_TYPES:
@@ -30,19 +59,19 @@ def group_by_type(objects_dict):
                     grouped[typ].append(name)
     return grouped
 def find_gaze_value(camera):
-        #print("Eyes tracking data in real time:", camera.eye_tracker.latest_data)
-        #print("Eyes tracking pos:", camera.eye_tracker.gaze_position)
-        gaze_position=camera.eye_tracker.gaze_position
-        return gaze_position
+    #print("Eyes tracking data in real time:", camera.eye_tracker.latest_data)
+    #print("Eyes tracking pos:", camera.eye_tracker.gaze_position)
+    gaze_position=camera.eye_tracker.gaze_position
+    return gaze_position
 
 def convert_gaze(frame,gaze_position):
-    	if frame is None or not isinstance(frame, np.ndarray):
-    		return None
-    	h,w = frame.shape[:2]
-    	u,v= float(gaze_position[0]), float(gaze_position[1])
-    	x = int(u*w)
-    	y = int((1-v)*h)
-    	return x,y
+    if frame is None or not isinstance(frame, np.ndarray):
+        return None
+    h,w = frame.shape[:2]
+    u,v= float(gaze_position[0]), float(gaze_position[1])
+    x = int(u*w)
+    y = int((1-v)*h)
+    return x,y
 
 def normalize_goal(goal):
     match = re.match(r"(\w+)\((\w+?)(\d*)\)", goal)
@@ -52,56 +81,23 @@ def normalize_goal(goal):
     return goal
 
 
-def video_object_recognition(video_path, yolo_model):
-
-    zed = sl.Camera()
-    input_type = sl.InputType()
-    input_type.set_from_svo_file(video_path)
-
-    init = sl.InitParameters(input_t=input_type, svo_real_time_mode=False)
-    if zed.open(init) != sl.ERROR_CODE.SUCCESS:
-        print("❌ Unable to open SVO file.")
-        exit()
-
-    mat = sl.Mat()
-
-    if zed.grab() == sl.ERROR_CODE.SUCCESS:
-        zed.retrieve_image(mat, sl.VIEW.LEFT)
-        frame = mat.get_data()
-        if frame.shape[2] == 4:
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
-
-    else:
-        print("Unable to grab image from SVO file.")
+def video_object_recognition(camera, yolo_model):
+    frame = camera.get_rgb_frame()
+    if frame is None:
         return [], None
 
     detections = yolo_model.detect_objects(frame)
-
-    #cap.release()
-    zed.close()
     return detections, frame
 
-def online_objet_recognition(camera_Zed,frame_skip=0, is_video=False):
-    # Initialize ZED camera and YOLOv8 model
 
-    runtime_params = sl.RuntimeParameters()
-    mat = sl.Mat()
+def online_objet_recognition(camera):
+    frame = camera.get_rgb_frame()
+    if frame is None:
+        return [], None
 
-    if camera_Zed.zed.grab(runtime_params) == sl.ERROR_CODE.SUCCESS:
-        camera_Zed.zed.retrieve_image(mat, sl.VIEW.LEFT)  # image extracted from ZED camera
-        frame = mat.get_data() # image in numpy format
+    detections = camera.detect_objects(frame)
+    return detections, frame
 
-        if frame.shape[2] == 4:  # RGBA image
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR) # Conversion in BGR
-
-        detections = camera_Zed.detect_objects(frame) # Run YOLOv8 detection
-        if is_video and frame_skip>0:
-            current_frame = camera_Zed.zed.get_svo_position()
-            camera_Zed.zed.set_svo_position(current_frame + frame_skip)
-
-        return detections, frame
-
-    return [], frame
 
 def rename_objects(detections, camera):
     object_count = {}
@@ -127,28 +123,28 @@ def build_all_possible_goals(list_of_actions, list_of_objects):
             all_possible_goals.append(goal)
     return all_possible_goals
 
-def compute_3d_position_from_mask(mask, point_cloud, stride=8, min_valid_points=20):
-    h, w = mask.shape
-    points = []
+def compute_3d_position_from_mask(mask, point_cloud):
+    ys, xs = np.where(mask== 1)  
+    depth_points = []
+    H, W = point_cloud.shape[:2]
 
-    for y in range(0, h, stride):
-        for x in range(0, w, stride):
-            if mask[y, x]:
-                err, point = point_cloud.get_value(x, y)
-                if err == sl.ERROR_CODE.SUCCESS:
-                    X, Y, Z, _ = point
-                    if not any(map(np.isnan, (X, Y, Z))) and Z > 0 and Z < 8000:
-                        points.append([X, Y, Z])
-
-    if len(points) < min_valid_points:
+    for y, x in zip(ys, xs):
+        if not (0 <= y < H and 0 <= x < W):
+            continue
+        X, Y, Z = point_cloud[y, x, :]
+        if Z == 0:
+            continue
+        depth_points.append((X, Y, Z))
+    if not depth_points:
         return None
+    return np.median(depth_points, axis=0)
 
-    return np.median(points, axis=0)
-
-def threaded_VLM_wrapper(model_name, caption, frame, objects, timing, result_container, list_of_actions):
+def threaded_VLM_wrapper(processorLL, model_name, caption, frame, objects, timing, result_container, list_of_actions):
     result = processorLL.VLM_process_func(model_name, caption, frame, objects, list_of_actions, timing)
     print("VLM output:", result)
     result_container["result"] = result
+    return result_container
+
 
 def build_current_goals_landmarks(goals_beliefs, obs_type_to_id, object_to_id):
         mapping = {}
@@ -229,11 +225,11 @@ def moving_closer(dict_3d_positions, hand_position_3d, last_distance):
 
 def save_last_distance(dict_3d_positions, hand_position_3d):
     last_distance=dict_3d_positions.copy()
-    #print(f"test print distance 3d avant", last_distance)
+    print(f"test print distance 3d avant", last_distance)
     for name, pos in last_distance.items():
         distance = np.linalg.norm(pos -hand_position_3d)
         last_distance[name]= distance
-    #print(f"test print distance 3d apres", last_distance)
+    print(f"test print distance 3d apres", last_distance)
     return last_distance
 
 def ID_to_text(ID, mapping_info):
@@ -241,7 +237,7 @@ def ID_to_text(ID, mapping_info):
         if index==ID:
             return landmark_text
 
-def generate_observations_live(dict_3d_positions, hand_position_3d, object_to_action_ids, mapping_info, threshold=1000):
+def generate_observations_live(dict_3d_positions, hand_position_3d, object_to_action_ids, mapping_info, threshold=100):
     observations = []
     test_observations = {}
     save_observations = {}
@@ -380,83 +376,26 @@ def display_goal_estimation(frame, goals_beliefs, object_boxes, previous_object_
 
     return object_goals
 
-def online_goal_estimation(camera_Zed, goals_beliefs, list_of_bounding_boxes, previous_object_goals, gaze_finalvalue):
-    if previous_object_goals is None:
-        previous_object_goals = {}
+def online_goal_estimation(camera, goals_beliefs, list_of_bounding_boxes, gaze_finalvalue):
+    frame = camera.get_rgb_frame()
+    if frame is None:
+        return {}
 
-    runtime_params = sl.RuntimeParameters()
-    mat = sl.Mat()
-    #object_goals = defaultdict(lambda: [None, -1], previous_object_goals)
     object_goals = defaultdict(lambda: [None, -1])
 
     for goal, probability in goals_beliefs.items():
-        object_names = []
-        if '(' in goal and ';' not in goal:
-            object_names = [goal.split('(')[-1].strip(') ')]
-        elif ';' in goal:
-            inner = goal.split('(')[-1].strip(')')
-            object_names = [name.strip() for name in inner.split(';')]
+        if '(' in goal:
+            objects = goal.split('(')[1].strip(')').split(';')
+            for obj in objects:
+                if probability > object_goals[obj][1]:
+                    object_goals[obj] = [goal, probability]
 
-        # update individual object goals
-        for object_name in object_names:
-            if object_name:
-                current_prob = object_goals[object_name][1]
-                if probability > current_prob:
-                    object_goals[object_name] = [goal, probability]
+    camera.draw_goal_boxes(frame, list_of_bounding_boxes, object_goals)
 
-    # image treatment
-    if camera_Zed.zed.grab(runtime_params) == sl.ERROR_CODE.SUCCESS:
-        camera_Zed.zed.retrieve_image(mat, sl.VIEW.LEFT)
-        frame = mat.get_data()
+    if gaze_finalvalue is not None:
+        camera.draw_gaze(frame, gaze_finalvalue)
 
-        if frame.shape[2] == 4:  # RGBA image
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
-
-        # Draw bounding boxes on the frame with custom labels and confidences
-        camera_Zed.draw_goal_boxes(frame, list_of_bounding_boxes, object_goals)
-        if gaze_finalvalue != "Unknown":
-        	camera.draw_gaze(frame, gaze_finalvalue)
-        ##
-        point_cloud = sl.Mat()
-        camera.zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA)
-
-        mask_overlay = np.zeros_like(frame, dtype=np.uint8)
-
-        for det in detections:
-            dict_3d_positions = {}
-            mask = det.get("mask")
-            if mask is not None:
-                resized_mask = cv2.resize(mask, (point_cloud.get_width(), point_cloud.get_height()), interpolation=cv2.INTER_NEAREST)
-                pos = compute_3d_position_from_mask(resized_mask, point_cloud)
-                #print(f"pos: {pos}")
-                if pos is not None:
-                    x, y, z = pos
-                    #print(f"[3D] {camera.model.names[det['class_id']]} → X={x:.2f}, Y={y:.2f}, Z={z:.2f}")
-                    resized_mask = cv2.resize(mask, (frame.shape[1], frame.shape[0]), interpolation=cv2.INTER_NEAREST)
-                    mask_overlay[resized_mask == 1] = [255, 0, 0]
-                    dict_3d_positions[name] = pos
-        frame = cv2.addWeighted(frame, 1.0, mask_overlay, 0.5, 0)
-
-        fps_times.append(time.time())
-        if len(fps_times) >= 2:
-            fps = len(fps_times) / (fps_times[-1] - fps_times[0])
-        else:
-            fps = 0.0
-
-        # display FPS on the frame
-        cv2.putText(frame, f"FPS: {fps:.2f}", (10, 50),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
-
-        y_offset = 100
-        for key, val in timing_stats.items():
-            cv2.putText(frame, f"{key}: {val:.2f}s", (10, y_offset),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)
-            y_offset += 20
-        # Display both frames
-        cv2.putText(frame, shared_caption.value[:60], (10, 25),
-            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
-        cv2.imshow("Goal Recognition", frame)
-
+    cv2.imshow("Goal Recognition", frame)
     return object_goals
 
 def process_multiline_caption(caption: str, similarity_model: SentenceSimilarityModel, list_of_actions, list_of_objects, top_k=1):
@@ -511,63 +450,6 @@ def create_transition_matrix(goals_beliefs, list_of_goals, hmm_transition_matrix
 
     return transition_matrix
 
-def visualize_sl_point_cloud(point_cloud_sl_mat):
-    """
-    Visualizes a ZED SDK point cloud (sl.Mat) using Open3D.
-
-    Parameters:
-        point_cloud_sl_mat (sl.Mat): A ZED point cloud filled with XYZRGBA data.
-    """
-    # Step 1: Extract data from sl.Mat
-    pc_np = point_cloud_sl_mat.get_data()  # shape: (H, W, 4), dtype: float32
-
-    # Step 2: Flatten and remove invalid points
-    pc_flat = pc_np.reshape(-1, 4)
-    valid = np.isfinite(pc_flat[:, 2])  # Only keep points with valid Z
-    pc_valid = pc_flat[valid]
-
-    if pc_valid.size == 0:
-        #print("No valid 3D points to display.")
-        return
-
-    # Step 3: Create Open3D point cloud
-    pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(pc_valid[:, :3])  # XYZ
-
-    # Step 4: Extract and normalize RGB from packed float RGBA
-    rgba = pc_valid[:, 3].astype(np.uint32).view(np.uint8).reshape(-1, 4)
-    rgb = rgba[:, :3] / 255.0
-    pcd.colors = o3d.utility.Vector3dVector(rgb)
-
-    # Step 5: Visualize
-    o3d.visualization.draw_geometries([pcd])
-
-def visualize_object_from_mask(mask,point_cloud,name="object"):
-    h,w = mask.shape
-    points = []
-    colors = []
-    for y in range(h):
-        for x in range(w):
-            if mask[y,x]:
-                err, point =point_cloud.get_value(x, y)
-                if err == sl.ERROR_CODE.SUCCESS:
-                    X, Y, Z, rgba = point
-                    if np.isfinite(X) and np.isfinite(Y) and np.isfinite(Z) and Z>0 and Z<80000000000000000:
-                        points.append([X,Y,Z])
-                        rgba_int =np.uint32(rgba)
-                        r = (rgba_int >> 24) & 0xFF
-                        g = (rgba_int >> 16) & 0xFF
-                        b = (rgba_int >> 8) & 0xFF
-                        colors.append([r/255.0, g/255.0, b/255.0])  # Normalize RGB values
-    if not points:
-        #print (f"No valid 3D points found for {name}.")
-        return
-    pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(np.array(points))
-    pcd.colors = o3d.utility.Vector3dVector(np.array(colors))
-
-    #print(f"Visualizing {name} with {len(points)} points.")
-    o3d.visualization.draw_geometries([pcd])
 
 def create_z_position_list(dict_3d_positions):
 
@@ -577,13 +459,13 @@ def create_z_position_list(dict_3d_positions):
             z_positions[name]= pos[2]  # Extract the Z coordinate
     return z_positions
 
-def load_transition_matrix(path="transition_proba_for_hmm.json"):
+def load_transition_matrix(path="inference/transition_proba_for_hmm.json"):
     with open(path, "r", encoding="utf-8") as f:
         transition_matrix = json.load(f)
     #print(f"[INFO] Transition matrix loaded from {path}")
     return transition_matrix
 
-def filter_observations(list_of_observations, list_of_goals):
+def filter_observations(list_of_observations, list_of_goals, mapping_info):
     filtred_observations = []
     for obs in list_of_observations:
         #print("list of observations test",list_of_observations)

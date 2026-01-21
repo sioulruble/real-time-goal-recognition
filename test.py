@@ -1,5 +1,5 @@
 
-from Hand_position import HandPositionReader
+from inference.Hand_position import HandPositionReader
 import time
 
 hand_reader = HandPositionReader()

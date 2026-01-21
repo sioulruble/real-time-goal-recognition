@@ -15,15 +15,33 @@ def parse_eye_msg(s:str):
 
 
 class EyesTracking:
-	def __init__(self,port=9999):
-		self.port= port
-		self.server_socket= socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+	def __init__(self, port=9999, max_port_tries=10):
+		"""
+		Bind the server socket. If requested port is busy, try an ephemeral port.
+		"""
+		self.port = port
+		self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-		self.server_socket.bind(("0.0.0.0",port))
+
+		bound = False
+		try:
+			self.server_socket.bind(("0.0.0.0", self.port))
+			bound = True
+		except OSError as e:
+			print(f"[EyesTracking] Port {self.port} busy: {e}. Trying to bind an ephemeral port...")
+			try:
+				self.server_socket.bind(("0.0.0.0", 0))  # ask OS for free port
+				self.port = self.server_socket.getsockname()[1]
+				bound = True
+				print(f"[EyesTracking] Bound to ephemeral port {self.port}")
+			except Exception as e2:
+				print(f"[EyesTracking] Failed to bind ephemeral port: {e2}")
+
+		if not bound:
+			self.server_socket.close()
+			raise RuntimeError(f"Could not bind EyesTracking socket to port {port} or an ephemeral port.")
+
 		self.server_socket.listen(1)
-		#print("Waiting for connection...")
-		#self.conn, self.addr = self.server_socket.accept()
-		#print("Connected  to:", self.addr)
 		self.conn = None
 		self.addr = None
 		self.latest_data = None
