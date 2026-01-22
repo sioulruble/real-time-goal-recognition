@@ -57,8 +57,6 @@ class HMM:
         min_likelihood = 1.0 / len(self.goal_beliefs)
 
         for action, goal in list_of_observations:
-            #print("GET LIKELIHOOD ACTION:", action)
-            #print("GET LIKELIHOOD GOAL", goal)
             likelihood[action] = []
 
             if action in self.decreasing_actions:
@@ -67,13 +65,10 @@ class HMM:
                 for current_goal in self.goal_beliefs:
                     if goal == current_goal:
                         likelihood[action].append(self.likelihood_table[action][0])
-                        #print("LIKELIHOOD true:", self.likelihood_table[action][0])
 
                     else:
                         likelihood[action].append(self.likelihood_table[action][1])
-                        #print("LIKELIHOOD false:", self.likelihood_table[action][1])
 
-                # Update likelihood table
                 self.likelihood_table[action][0] = max(self.likelihood_table[action][0] * memory_loss, min_likelihood)
                 self.likelihood_table[action][1] = min(self.likelihood_table[action][1] + added_value, min_likelihood)
 
@@ -83,8 +78,6 @@ class HMM:
                         likelihood[action].append(self.likelihood_table[action][0])
                     else:
                         likelihood[action].append(self.likelihood_table[action][1])
-
-        #print("Likelihood table updated:", self.likelihood_table)
         return likelihood
 
 
@@ -92,8 +85,6 @@ class HMM:
         number_of_goals = len(self.goal_beliefs)
         memory_loss = math.pow(memory_loss_value, 1.0 / (1.0 / update_time))
         likelihood = self.get_likelihood(memory_loss, list_of_observations)
-        #print("Likelihood table:", likelihood)
-
         sum_beliefs = 0
         previous_beliefs = self.goal_beliefs.copy()
 
@@ -137,6 +128,4 @@ class HMM:
         if current_goal == "Undecided":
             alpha = 0
 
-        #print("Current goal:", current_goal)
-        #print("goal beliefs:", self.goal_beliefs)
         return alpha, current_goal

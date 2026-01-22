@@ -189,6 +189,7 @@ class VLMProcessor:
             try:
                 result = response.json()
                 message = result.get("message", {}).get("content", "").strip()
+
                 return message
             except json.JSONDecodeError:
                 print("❌ Erreur de décodage JSON. Contenu brut de la réponse :")

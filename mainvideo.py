@@ -126,19 +126,36 @@ last_distance = {}
 smodel = SentenceTransformer("all-MiniLM-L6-v2")
 smModel = SentenceSimilarityModel(smodel)
 
-#Initialize HMM
-goals_beliefs = {goal: 1 / len(list_of_goals) for goal in list_of_goals}
-loaded_matrix= load_transition_matrix(path="inference/transition_proba_for_hmm.json")
-transition_proba =create_transition_matrix(goals_beliefs, list_of_goals, loaded_matrix)
-current_goals_landmarks = build_current_goals_landmarks(goals_beliefs, obs_type_to_id, object_to_id)
-mapping_info = mapping_infos(obs_type_to_id, object_to_id)
-decreasing_actions = [] # actions that decrease the probability of the goal
-hmm = HMM(goals_beliefs, transition_proba, current_goals_landmarks, decreasing_actions)
-landmark_uniqueness = hmm.get_landmarks_uniqueness() #uniqueness computation (proba d'observer certaines actions selon chaque objectif)
-hmm.compute_likelihood_table(heuristic_ratio, landmark_uniqueness)
-hand_position_3d = np.array([0.0, 0.0, 0.0])
+
+
 
 if __name__ == "__main__":
+
+
+    #Initialize HMM
+    image, _ = camera.get_frames()
+    while image is None:
+        image, _ = camera.get_frames()
+    detections, image = online_objet_recognition(camera)
+    classes = camera.classes
+    object_to_id = {obj: idx for idx, obj in enumerate(classes)}
+    goals_beliefs = {goal: 1 / len(list_of_goals) for goal in list_of_goals}
+    loaded_matrix= load_transition_matrix(path="inference/transition_proba_for_hmm.json")
+    transition_proba =create_transition_matrix(goals_beliefs, list_of_goals, loaded_matrix)
+    current_goals_landmarks = build_current_goals_landmarks(goals_beliefs, obs_type_to_id, object_to_id)
+    mapping_info = mapping_infos(obs_type_to_id, object_to_id)
+    decreasing_actions = [] # actions that decrease the probability of the goal
+    hmm = HMM(goals_beliefs, transition_proba, current_goals_landmarks, decreasing_actions)
+    landmark_uniqueness = hmm.get_landmarks_uniqueness() #uniqueness computation (proba d'observer certaines actions selon chaque objectif)
+    hmm.compute_likelihood_table(heuristic_ratio, landmark_uniqueness)
+    hand_position_3d = np.array([0.0, 0.0, 0.0])
+    list_of_observations = []
+
+
+
+
+
+
     while True:
         current_time = datetime.now()
         yolo_elapsed_time = current_time - yolo_timer
@@ -178,6 +195,15 @@ if __name__ == "__main__":
             for det in detections:
                 name = camera.model.names[det["class_id"]]
                 mask = det.get("mask")
+                
+                # Handle multiple objects of the same class
+                if name in dict_3d_positions:
+                    counter = 2
+                    new_name = f"{name}{counter}"
+                    while new_name in dict_3d_positions:
+                        counter += 1
+                        new_name = f"{name}{counter}"
+                    name = new_name
                 if mask is not None:
                     resized_mask = cv2.resize(mask, (points3d.shape[1], points3d.shape[0]), interpolation=cv2.INTER_NEAREST)
                     pos = compute_3d_position_from_mask(resized_mask, camera, depth)
@@ -191,7 +217,7 @@ if __name__ == "__main__":
             dict_of_objects = rename_objects(detections, camera)
 
              #VLM Preptreatement /thread
-            if (datetime.now() - last_vlm_time).total_seconds() > 3 and image is not None:
+            if (datetime.now() - last_vlm_time).total_seconds() > 3:
                 print   ("⏳ Starting VLM processing thread...")
                 last_vlm_time = datetime.now()
                 try:
@@ -206,7 +232,6 @@ if __name__ == "__main__":
                         target=threaded_VLM_wrapper,
                         args=(processorLL, VLM_model_name, shared_caption, vlmframe, dict_of_objects_at_vlm_time, timing_stats, vlm_result_container, list_of_actions)
                     )
-                    #dict_of_objects = dict(new_dict_of_objects) # update the dictionary of objects
                     vlm_thread.start()
                 except Exception as e:
                     print(f"Erreur pendant le traitement VLM : {e}")
@@ -218,7 +243,6 @@ if __name__ == "__main__":
                     current_state = result if isinstance(result, list) else [result]
                     print(f"current_state mis à jour par VLM : {current_state}")
 
-                    #all_possible = []
                     if dict_of_objects:
                         list_of_goals = process_multiline_caption(result, smModel, list_of_actions, list(dict_of_objects_at_vlm_time.keys()))
                     else:
@@ -234,6 +258,7 @@ if __name__ == "__main__":
 
 
                     if set(list_of_goals) != set(hmm.goal_beliefs.keys()):
+
                         hmm.goal_beliefs = {goal: 1 / len(list_of_goals) for goal in list_of_goals}
                         hmm.transition_proba = create_transition_matrix(hmm.goal_beliefs, list_of_goals, loaded_matrix)
                         hmm.current_goals_landmarks = build_current_goals_landmarks(hmm.goal_beliefs, obs_type_to_id, object_to_id)
@@ -250,9 +275,7 @@ if __name__ == "__main__":
                     closest_object_observations = generate_observations_live(dict_3d_positions, hand_position_3d, object_to_action_ids, mapping_info)
                     all_observations=[]
                     all_observations= closest_object_observations + new_observation
-                    #print("All observations",all_observations)
                     list_of_observations = match_obs_with_landmarks_id(all_observations, mapping_info)
-                    #print("All observations1",list_of_observations)
                     last_distance= save_last_distance(dict_3d_positions, hand_position_3d)
                     list_of_observations = [obs for obs in list_of_observations if obs != 99]
 
@@ -260,7 +283,6 @@ if __name__ == "__main__":
 
 
 
-            #compare old object with new object (if the same object is detected in the new frame)
             if new_dict_of_objects.keys() != dict_of_objects.keys():
                 common_object_list = []
                 for object_name in new_dict_of_objects:
@@ -293,7 +315,6 @@ if __name__ == "__main__":
                     list_of_goals.append("Undecided")
 
 
-                # if the list of goals is different from the previous one, update the HMM
                 if set(list_of_goals) != set(hmm.goal_beliefs.keys()):
                     # update the goal beliefs
                     hmm.goal_beliefs = {goal: 1 / len(list_of_goals) for goal in list_of_goals}
@@ -317,20 +338,17 @@ if __name__ == "__main__":
                     obj = goal.split('(')[-1].strip(') ')
                     object_to_action_ids[obj].extend(ids)
             last_distance = save_last_distance(dict_3d_positions, hand_position_3d)
-
             closest_object, diff_distance, new_observation = moving_closer(dict_3d_positions, hand_position_3d, last_distance)
-            closest_object_observations = generate_observations_live(dict_3d_positions, hand_position_3d, object_to_action_ids, mapping_info) #generated observations simulated to estimate the probability of each goal being pursued.
+            closest_object_observations = generate_observations_live(dict_3d_positions, hand_position_3d, object_to_action_ids, mapping_info) 
             all_observations=[]
             all_observations= closest_object_observations + new_observation
+            print("All observations:", all_observations)
             list_of_observations = match_obs_with_landmarks_id(all_observations, mapping_info)
             last_distance= save_last_distance(dict_3d_positions, hand_position_3d)
-            # print(f"dict_3d_positions before: {dict_3d_positions}")
             z_positions=create_z_position_list(dict_3d_positions)
-            # print(f"z_positions: {z_positions}")
             min_dist = min(z_positions.values())
             grab_hmm = GrabHMM()
             state, conf = grab_hmm.update(min_dist)
-            #print(f"min_dist = {min_dist} → State: {state}, confidence = {conf:.2f}")
 
             # Add the closest object as goal if it's not already in the list
             goal_candidate= goals_candidate(dict_3d_positions, hand_position_3d, list_of_goals)
@@ -338,7 +356,6 @@ if __name__ == "__main__":
                 list_of_goals.extend(goal_candidate)
             if "Undecided" not in list_of_goals:
                 list_of_goals.append("Undecided")
-
             # if the list of goals is different from the previous one, update the HMM
             if set(list_of_goals) != set(hmm.goal_beliefs.keys()):
                 # update the goal beliefs
@@ -362,17 +379,16 @@ if __name__ == "__main__":
             bar = "█" * bar_length + "░" * (30 - bar_length)
             print(f"{i}. {goal:30s} │{bar}│ {probability:.2%}")
         print("="*50 + "\n")
-            #Method to update the goals
+
         if list_of_observations:
            filtred_observations= filter_observations(list_of_observations, list_of_goals, mapping_info)
+           print("Filtered observations:", filtred_observations)
            alpha, current_goal = hmm.assisted_teleop(updating_time, memory_loss_value, filtred_observations)
 
         for value in hmm.goal_beliefs.values():
                 if value > threshold_proba:
-                    new_goal_achieved = True
-
-        
-        object_goals = online_goal_estimation(camera, image,  hmm.goal_beliefs, dict_of_objects, gaze_finalvalue)
+                    new_goal_achieved = True   
+        object_goals = online_goal_estimation(camera, image,  hmm.goal_beliefs, dict_of_objects, gaze_finalvalue, closest_object_observations)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
     cv2.destroyAllWindows()

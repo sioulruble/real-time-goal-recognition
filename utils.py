@@ -112,7 +112,7 @@ def rename_objects(detections, camera):
         else:
             object_count[class_id] = 1
             renamed_objects[camera.model.names[class_id]] = obj["box"]
-
+    print("Renamed objects:", renamed_objects)
     return renamed_objects
 
 def build_all_possible_goals(list_of_actions, list_of_objects):
@@ -129,14 +129,14 @@ def compute_3d_position_from_mask(mask, camera, depth):
     if len(xs) == 0:
         return None
 
-    Z = depth[ys, xs].astype(np.float32)
+    Z = depth[ys, xs].astype(np.float32)   # Convert to meters
     valid = Z > 0
     if not np.any(valid):
         return None
 
     xs = xs[valid]
     ys = ys[valid]
-    Z  = Z[valid]
+    Z  = Z[valid] / 1000.0  # Convert to meters
 
     fx = camera.intrinsics[4]
     fy = camera.intrinsics[5]
@@ -147,6 +147,7 @@ def compute_3d_position_from_mask(mask, camera, depth):
     Y = (ys - cy) * Z / fy
 
     points = np.stack([X, Y, Z], axis=1)
+    print (np.mean(points, axis=0), "mean" )
     return np.median(points, axis=0)
 
 def threaded_VLM_wrapper(processorLL, model_name, caption, frame, objects, timing, result_container, list_of_actions):
@@ -208,7 +209,7 @@ def moving_closer(dict_3d_positions, hand_position_3d, last_distance):
 
     #print(f"test diff distance 3d avant", diff_distance)
     for name, pos in diff_distance.items():
-        if name in last_distance:
+        if name in last_distance and name != 'person':
             distance = np.linalg.norm(pos -hand_position_3d)
             diff = last_distance[name] - distance
             if diff>0 :
@@ -236,8 +237,12 @@ def moving_closer(dict_3d_positions, hand_position_3d, last_distance):
 def save_last_distance(dict_3d_positions, hand_position_3d):
     last_distance=dict_3d_positions.copy()
     for name, pos in last_distance.items():
-        distance = np.linalg.norm(pos -hand_position_3d)
-        last_distance[name]= distance
+        # if "person" in name.lower():
+        #     last_distance[name] = float('inf')
+        # else:
+        
+        distance = np.linalg.norm(pos - hand_position_3d)
+        last_distance[name] = distance
     return last_distance
 
 def ID_to_text(ID, mapping_info):
@@ -251,12 +256,14 @@ def generate_observations_live(dict_3d_positions, hand_position_3d, object_to_ac
     save_observations = {}
     # Step 1: Find nearby objects
     for name, pos in dict_3d_positions.items():
+        # if name != 'person':
         distance = np.linalg.norm(pos - hand_position_3d)
         if distance < threshold:
             save_observations[name] = distance
 
     # Step 2: Sort objects by distance
     sorted_objects = sorted(save_observations.items(), key=lambda item: item[1])
+    print("Sorted nearby objects:", sorted_objects)
 
     if not sorted_objects:
         print("No objects detected within the threshold.")
@@ -384,7 +391,7 @@ def display_goal_estimation(frame, goals_beliefs, object_boxes, previous_object_
 
     return object_goals
 
-def online_goal_estimation(camera, image, goals_beliefs, list_of_bounding_boxes, gaze_finalvalue):
+def online_goal_estimation(camera, image, goals_beliefs, list_of_bounding_boxes, gaze_finalvalue, closest_object_observations=None):
     frame = image 
     if frame is None:
         return {}
@@ -399,7 +406,9 @@ def online_goal_estimation(camera, image, goals_beliefs, list_of_bounding_boxes,
                     object_goals[obj] = [goal, probability]
 
     camera.draw_goal_boxes(frame, list_of_bounding_boxes, object_goals)
-
+    if closest_object_observations is not None:
+        cv2.putText(frame, f"Closest object: {', '.join(str(closest_object_observations))}", (10, 80),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
     if gaze_finalvalue is not None:
         camera.draw_gaze(frame, gaze_finalvalue)
 

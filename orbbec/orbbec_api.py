@@ -296,6 +296,14 @@ class OrbbecPlugin:
                         "box": [x1, y1, x2 - x1, y2 - y1],  # Format as [x, y, w, h]
                         "mask": mask
                     })
+        
+        # Apply NMS (Non-Maximum Suppression)
+        if detections:
+            boxes = np.array([[d["box"][0], d["box"][1], d["box"][0] + d["box"][2], d["box"][1] + d["box"][3]] for d in detections])
+            confidences = np.array([d["confidence"] for d in detections])
+            indices = cv2.dnn.NMSBoxes(boxes.tolist(), confidences.tolist(), prediction_conf_threshold, nms_threshold=0.4)
+            detections = [detections[i] for i in indices.flatten()]
+        
         return detections
 
     def draw_bounding_boxes(self, frame, detections, classes, labels=None, confidences=None):
@@ -360,7 +368,7 @@ class OrbbecPlugin:
         ):
             return None
 
-        Z = self.depth[v, u]
+        Z = self.depth[v, u] / 1000.0  # mm → meters
         if Z <= 0:
             return None
 
@@ -373,7 +381,7 @@ class OrbbecPlugin:
         return X, Y, Z
 
     def depth_to_3dpoints(self):
-        H, W = self.depth.shape
+        H, W = self.depth.shape[:2]
 
         fx = self.intrinsics[4]
         fy = self.intrinsics[5]
@@ -386,7 +394,7 @@ class OrbbecPlugin:
             np.arange(H)
         )
 
-        Z = self.depth.astype(np.float32)
+        Z = self.depth.astype(np.float32) / 1000.0  # en mètres
         mask = Z > 0
 
         X = (xs - cx) * Z / fx
@@ -396,8 +404,6 @@ class OrbbecPlugin:
         depth_3dpoints[..., 0] = X
         depth_3dpoints[..., 1] = Y
         depth_3dpoints[..., 2] = Z
-
-        depth_3dpoints[~mask] = 0.0
 
         return depth_3dpoints
 
@@ -438,10 +444,7 @@ class OrbbecPlugin:
             depth_data = self.temporal_filter.process(depth_data)
         depth = depth_data.astype(np.uint16)
 
-        if self.temporal_filter:
-            depth = self.temporal_filter.process(depth)
-
-        depth = depth.astype(np.uint16)
+       
         depth = cv2.resize(depth, (rgb.shape[1], rgb.shape[0]), interpolation=cv2.INTER_NEAREST)
         self.depth = depth
         self.rgb = rgb
