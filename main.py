@@ -24,11 +24,6 @@ from rtgr.inference.VLM import VLMProcessor
 from langchain_ollama import OllamaLLM as Ollama
 from sentence_transformers import SentenceTransformer 
 from rtgr.inference.similaritymodel import SentenceSimilarityModel
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline, BitsAndBytesConfig
-from langchain_huggingface import HuggingFacePipeline
-import mediapipe as mp
 import cv2
 import time
 from collections import defaultdict
@@ -44,6 +39,7 @@ from rtgr.config.paths import  YOLO_MODEL, TRANSITION_MATRIX, GOALS_TYPE_CSV, TI
 from rtgr.sensors.orbbec.orbbec_depth_sensor import *
 from rtgr.perception.hand_tracking.hand_mediapipe import *
 import time
+from ultralytics import RTDETR
 
 # === Parameters ===
 video_path = "recorded_stream.svo"
@@ -68,7 +64,7 @@ hands = mp_hands.Hands(
 yolo_timer = datetime.now()
 timer = datetime.now()
 waiting_timer = datetime.now()
-yolo_updating_time = 0.20
+yolo_updating_time = 0.5
 updating_time = 0.1
 threshold_proba = 0.75
 temperature = 0.4
@@ -148,6 +144,7 @@ if __name__ == "__main__":
     decreasing_actions = [] # actions that decrease the probability of the goal
     hmm = HMM(goals_beliefs, transition_proba, current_goals_landmarks, decreasing_actions)
     landmark_uniqueness = hmm.get_landmarks_uniqueness() #uniqueness computation (proba d'observer certaines actions selon chaque objectif)
+    print(landmark_uniqueness)
     hmm.compute_likelihood_table(heuristic_ratio, landmark_uniqueness)
     hand._3Dpos = np.array([np.inf, np.inf, np.inf])
     dict_3d_positions = estimate_objects_3d_positions(detections, depth, classes)
@@ -163,7 +160,7 @@ if __name__ == "__main__":
         elapsed_time = current_time - timer
         image, depth = camera.get_frames()
         results = hands.process( cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-        hand.update(image, depth)
+        hand.update_position(image, depth)
         
 
         start_time = time.time()
@@ -206,10 +203,9 @@ if __name__ == "__main__":
                 print("✅ VLM thread finished, retrieving results...")
                 result = vlm_result_container.get("result", None)
                 if result:
-                    current_state = result if isinstance(result, list) else [result]
-
                     if dict_of_objects:
                         list_of_goals = process_multiline_caption(result, smModel, list_of_actions, list(dict_of_objects_at_vlm_time.keys()))
+
                     else:
                         print("No object detected — skipping similarity_model call.")
                         list_of_goals = []
@@ -220,16 +216,6 @@ if __name__ == "__main__":
 
                     if "Undecided" not in list_of_goals:
                         list_of_goals.append("Undecided")
-
-
-                    if set(list_of_goals) != set(hmm.goal_beliefs.keys()):
-                        print("VCVVVVVVVV")
-
-                        hmm.goal_beliefs = {goal: 1 / len(list_of_goals) for goal in list_of_goals}
-                        hmm.transition_proba = create_transition_matrix(hmm.goal_beliefs, list_of_goals, loaded_matrix)
-                        hmm.current_goals_landmarks = build_current_goals_landmarks(hmm.goal_beliefs, obs_type_to_id, object_to_id)
-                        uniqueness = hmm.get_landmarks_uniqueness()
-                        hmm.compute_likelihood_table(heuristic_ratio, uniqueness)
 
                     object_to_action_ids = defaultdict(list)
                     for goal, ids in current_goals_landmarks.items():
@@ -243,57 +229,14 @@ if __name__ == "__main__":
                     all_observations= closest_object_observations + new_observation
                     list_of_observations = match_obs_with_landmarks_id(all_observations, mapping_info)
                     list_of_observations = [obs for obs in list_of_observations if obs != 99]
+                    if set(list_of_goals) != set(hmm.goal_beliefs.keys()):
+                        hmm.goal_beliefs = {goal: 1 / len(list_of_goals) for goal in list_of_goals}
+                        hmm.transition_proba = create_transition_matrix(hmm.goal_beliefs, list_of_goals, loaded_matrix)
+                        hmm.current_goals_landmarks = build_current_goals_landmarks(hmm.goal_beliefs, obs_type_to_id, object_to_id)
+                        uniqueness = hmm.get_landmarks_uniqueness()
+                        hmm.compute_likelihood_table(heuristic_ratio, uniqueness)
 
                 vlm_thread = None
-
-
-
-            if new_dict_of_objects.keys() != dict_of_objects.keys():
-                common_object_list = []
-                for object_name in new_dict_of_objects:
-                    if object_name in dict_of_objects:
-                        if similarities_between_boxes(dict_of_objects[object_name], new_dict_of_objects[object_name], 200):
-                            common_object_list.append(object_name)
-
-                sameobjects = False
-                if len(dict_of_objects) == 0:
-                    print("No object detected — skipping similarity_model call.")
-                    continue
-
-                object_to_action_ids = defaultdict(list)
-                for goal, ids in current_goals_landmarks.items():
-                    if '(' in goal:
-                        obj = goal.split('(')[-1].strip(') ')
-                        object_to_action_ids[obj].extend(ids)
-
-                closest_object, diff_distance, new_observation = moving_closer(dict_3d_positions, hand._3Dpos, last_distance)
-                closest_object_observations = generate_observations_live(dict_3d_positions, hand._3Dpos) #generated observations simulated to estimate the probability of each goal being pursued.
-                all_observations=[]
-                all_observations= closest_object_observations + new_observation
-                list_of_observations = match_obs_with_landmarks_id(all_observations, mapping_info)
-                goal_candidate= goals_candidate(dict_3d_positions, hand._3Dpos, list_of_goals, TIME_SPENT_CSV)
-                if goal_candidate:
-                    list_of_goals.extend(goal_candidate)
-
-                if "Undecided" not in list_of_goals:
-                    list_of_goals.append("Undecided")
-
-
-                if set(list_of_goals) != set(hmm.goal_beliefs.keys()):
-                    print("AAAAAAAAAAA")
-
-                    # update the goal beliefs
-                    hmm.goal_beliefs = {goal: 1 / len(list_of_goals) for goal in list_of_goals}
-
-                    # update the transition probabilities
-                    transition_proba = create_transition_matrix(hmm.goal_beliefs, list_of_goals, loaded_matrix)
-                    hmm.transition_proba = transition_proba
-
-                    # update the landmarks
-                    hmm.current_goals_landmarks = build_current_goals_landmarks(hmm.goal_beliefs, obs_type_to_id, object_to_id)
-                    uniqueness = hmm.get_landmarks_uniqueness()
-                    hmm.compute_likelihood_table(heuristic_ratio, uniqueness)
-
 
             if len(dict_of_objects) == 0:
                     print("⚠️ No object detected — skipping similarity_model call.")
@@ -306,32 +249,20 @@ if __name__ == "__main__":
             closest_object, diff_distance, new_observation = moving_closer(dict_3d_positions, hand._3Dpos, last_distance)
             print("new observation", new_observation)
 
-            closest_object_observations = generate_observations_live(dict_3d_positions, hand._3Dpos) 
+            closest_object_observations = generate_observations_live(dict_3d_positions, hand._3Dpos)
             all_observations=[]
             all_observations= closest_object_observations + new_observation
             list_of_observations = match_obs_with_landmarks_id(all_observations, mapping_info)
+            list_of_observations = [obs for obs in list_of_observations if obs != 99]
             last_distance= save_last_distance(dict_3d_positions, hand._3Dpos)
-
             goal_candidate= goals_candidate(dict_3d_positions, hand._3Dpos, list_of_goals, TIME_SPENT_CSV)
             if goal_candidate:
                 list_of_goals.extend(goal_candidate)
             if "Undecided" not in list_of_goals:
                 list_of_goals.append("Undecided")
 
-            if set(list_of_goals) != set(hmm.goal_beliefs.keys()):
-                print("BBBBBBBB")
+            # print("-------")
 
-                # update the goal beliefs
-                hmm.goal_beliefs = {goal: 1 / len(list_of_goals) for goal in list_of_goals}
-
-                # update the transition probabilities
-                transition_proba = create_transition_matrix(hmm.goal_beliefs, list_of_goals, loaded_matrix)
-                hmm.transition_proba = transition_proba
-
-                # update the landmarks
-                hmm.current_goals_landmarks = build_current_goals_landmarks(hmm.goal_beliefs, obs_type_to_id, object_to_id)
-                uniqueness = hmm.get_landmarks_uniqueness()
-                hmm.compute_likelihood_table(heuristic_ratio, uniqueness)
 
         print("\n" + "="*50)
         print("🎯 TOP 5 GOAL PROBABILITIES")
@@ -341,23 +272,21 @@ if __name__ == "__main__":
             bar_length = int(probability * 30)
             bar = "█" * bar_length + "░" * (30 - bar_length)
             print(f"{i}. {goal:30s} │{bar}│ {probability:.2%}")
-        print("="*50 + "\n")
+
+
+
+        if set(list_of_goals) != set(hmm.goal_beliefs.keys()):
+            hmm.goal_beliefs = {goal: 1 / len(list_of_goals) for goal in list_of_goals}
+            hmm.transition_proba = create_transition_matrix(hmm.goal_beliefs, list_of_goals, loaded_matrix)
+            hmm.current_goals_landmarks = build_current_goals_landmarks(hmm.goal_beliefs, obs_type_to_id, object_to_id)
+            uniqueness = hmm.get_landmarks_uniqueness()
+            hmm.compute_likelihood_table(heuristic_ratio, uniqueness)
 
         if list_of_observations:
-           filtred_observations= filter_observations(list_of_observations, list_of_goals, mapping_info)
-           alpha, current_goal = hmm.assisted_teleop(updating_time, memory_loss_value, filtred_observations)
+            filtred_observations= filter_observations(list_of_observations, list_of_goals, mapping_info)
+            alpha, current_goal = hmm.assisted_teleop(updating_time, memory_loss_value, filtred_observations)
 
-        for value in hmm.goal_beliefs.values():
-                if value > threshold_proba:
-                    new_goal_achieved = True   
-
-        try :
-            object_goals = online_goal_estimation(image,  hmm.goal_beliefs, dict_of_objects, gaze_finalvalue, closest_object_observations)
-
-        except Exception as e:
-            print("ok")
-
-
+        object_goals = online_goal_estimation(image,  hmm.goal_beliefs, dict_of_objects, gaze_finalvalue, closest_object_observations)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

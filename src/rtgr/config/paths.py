@@ -10,7 +10,7 @@ DATA_DIR = Path(os.getenv("DATA_DIR", ROOT / "data"))
 MODELS_DIR = Path(os.getenv("MODELS_DIR", ROOT / "models"))
 
 # Inference / artifacts used by the codebase
-YOLO_MODEL = Path(os.getenv("YOLO_MODEL", MODELS_DIR / "yolov8n-seg.pt"))
+YOLO_MODEL = Path(os.getenv("YOLO_MODEL", MODELS_DIR / "yolo26s-seg.pt"))
 TRANSITION_MATRIX = Path(os.getenv("TRANSITION_MATRIX", DATA_DIR / "transition_proba_for_hmm.json"))
 GOALS_TYPE_CSV = Path(os.getenv("GOALS_TYPE_CSV", DATA_DIR / "goals_type.csv"))
 TIME_SPENT_CSV = Path(os.getenv("TIME_SPENT_CSV", DATA_DIR / "time_spent.csv"))
