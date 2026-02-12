@@ -3,12 +3,14 @@ from typing import Dict, List, Tuple
 
 class HMM:
     def __init__(self, goal_beliefs: Dict[str, float], transition_proba: Dict[str, List[float]], current_goals_landmarks: Dict[str, int], decreasing_actions: List[int]):
- 
+
         self.goal_beliefs = goal_beliefs
         self.decreasing_actions = decreasing_actions
         self.transition_proba = transition_proba
         self.current_goals_landmarks = current_goals_landmarks
         self.likelihood_table = {}
+        self.action_counter = {}
+        self.min_persistence = 3
 
 
     def get_landmarks_uniqueness(self):
@@ -55,31 +57,64 @@ class HMM:
     def get_likelihood(self, memory_loss: float, list_of_observations: List[Tuple[int, str]]):
         likelihood = {}
         min_likelihood = 1.0 / len(self.goal_beliefs)
+        current_actions = [obs[0] for obs in list_of_observations]
 
-        for action, goal in list_of_observations:
+        for action in current_actions:
+            self.action_counter[action] = self.action_counter.get(action, 0) + 1
+
+        # reset unseen actions
+        for action in list(self.action_counter.keys()):
+            if action not in current_actions:
+                self.action_counter[action] = 0
+
+        for action, observed_goal in list_of_observations:
             likelihood[action] = []
+
+            # persistence factor (0 → 1)
+            persistence = min(
+                1.0,
+                self.action_counter[action] / self.min_persistence
+            )
 
             if action in self.decreasing_actions:
 
-                added_value = (self.likelihood_table[action][0] - self.likelihood_table[action][0] * memory_loss) / len(self.goal_beliefs)
+                added_value = (
+                    self.likelihood_table[action][0]
+                    - self.likelihood_table[action][0] * memory_loss
+                ) / len(self.goal_beliefs)
+
                 for current_goal in self.goal_beliefs:
-                    if goal == current_goal:
-                        likelihood[action].append(self.likelihood_table[action][0])
-
+                    if observed_goal == current_goal:
+                        likelihood[action].append(
+                            self.likelihood_table[action][0] * persistence
+                        )
                     else:
-                        likelihood[action].append(self.likelihood_table[action][1])
+                        likelihood[action].append(
+                            self.likelihood_table[action][1] * persistence
+                        )
 
-                self.likelihood_table[action][0] = max(self.likelihood_table[action][0] * memory_loss, min_likelihood)
-                self.likelihood_table[action][1] = min(self.likelihood_table[action][1] + added_value, min_likelihood)
+                # decay likelihood memory
+                self.likelihood_table[action][0] = max(
+                    self.likelihood_table[action][0] * memory_loss,
+                    min_likelihood
+                )
+                self.likelihood_table[action][1] = min(
+                    self.likelihood_table[action][1] + added_value,
+                    min_likelihood
+                )
 
             else:
                 for current_goal in self.goal_beliefs:
-                    if goal == current_goal:
-                        likelihood[action].append(self.likelihood_table[action][0])
+                    if observed_goal == current_goal:
+                        likelihood[action].append(
+                            self.likelihood_table[action][0] * persistence
+                        )
                     else:
-                        likelihood[action].append(self.likelihood_table[action][1])
-        return likelihood
+                        likelihood[action].append(
+                            self.likelihood_table[action][1] * persistence
+                        )
 
+        return likelihood
 
     def assisted_teleop(self, update_time: float, memory_loss_value: float, list_of_observations: List[Tuple[int, str]]):
         number_of_goals = len(self.goal_beliefs)

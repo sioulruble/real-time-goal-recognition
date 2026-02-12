@@ -15,12 +15,11 @@ import json
 import csv
 
 # === External Modules ===
-from orbbec.orbbec_api import OrbbecPlugin as pluginOrbbec
-from inference.HMM import HMM
-from inference.VLM import VLMProcessor
+from rtgr.inference.hmm import HMM
+from rtgr.inference.VLM import VLMProcessor
 from langchain_ollama import OllamaLLM as Ollama
 from sentence_transformers import SentenceTransformer 
-from inference.similaritymodel import SentenceSimilarityModel
+from rtgr.inference.similaritymodel import SentenceSimilarityModel
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline, BitsAndBytesConfig
@@ -32,11 +31,11 @@ from collections import defaultdict
 from ultralytics import YOLO
 import os
 import open3d as o3d
-from inference.HMM_grab import GrabHMM
-from inference.Hand_position import HandPositionReader
-from inference.receive_gaze import EyesTracking
-
-from utils import *
+from rtgr.inference.hmm_grab import GrabHMM
+from rtgr.inference.Hand_position import HandPositionReader
+from rtgr.inference.receive_gaze import EyesTracking
+from rtgr.visualization.overlays import *
+from rtgr.utils import *
 
 
 def load_object_types(csv_path="goals_type.csv"):
@@ -59,8 +58,6 @@ def group_by_type(objects_dict, OBJECT_TYPES):
                     grouped[typ].append(name)
     return grouped
 def find_gaze_value(camera):
-    #print("Eyes tracking data in real time:", camera.eye_tracker.latest_data)
-    #print("Eyes tracking pos:", camera.eye_tracker.gaze_position)
     gaze_position=camera.eye_tracker.gaze_position
     return gaze_position
 
@@ -81,38 +78,19 @@ def normalize_goal(goal):
     return goal
 
 
-def video_object_recognition(camera, yolo_model):
-    frame = camera.get_rgb_frame()
-    if frame is None:
-        return [], None
-
-    detections = yolo_model.detect_objects(frame)
-    return detections, frame
-
-
-def online_objet_recognition(camera):
-    frame = camera.get_rgb_frame()
-    if frame is None:
-        return [], None
-
-    detections = camera.detect_objects(frame)
-    return detections, frame
-
-
-def rename_objects(detections, camera):
+def rename_objects(detections, model):
     object_count = {}
     renamed_objects = {}
 
     for obj in detections:
         class_id = obj["class_id"]
-        # Increment count for the object in the dictionary
         if class_id in object_count:
             object_count[class_id] += 1
-            renamed_objects[f"{camera.model.names[class_id]}{object_count[class_id]}"] = obj["box"]
+            renamed_objects[f"{model.names[class_id]}{object_count[class_id]}"] = obj["box"]
         else:
             object_count[class_id] = 1
-            renamed_objects[camera.model.names[class_id]] = obj["box"]
-    print("Renamed objects:", renamed_objects)
+            renamed_objects[model.names[class_id]] = obj["box"]
+
     return renamed_objects
 
 def build_all_possible_goals(list_of_actions, list_of_objects):
@@ -123,32 +101,7 @@ def build_all_possible_goals(list_of_actions, list_of_objects):
             all_possible_goals.append(goal)
     return all_possible_goals
 
-def compute_3d_position_from_mask(mask, camera, depth):
-    # pixels du masque
-    ys, xs = np.where(mask > 0)
-    if len(xs) == 0:
-        return None
 
-    Z = depth[ys, xs].astype(np.float32)   # Convert to meters
-    valid = Z > 0
-    if not np.any(valid):
-        return None
-
-    xs = xs[valid]
-    ys = ys[valid]
-    Z  = Z[valid] / 1000.0  # Convert to meters
-
-    fx = camera.intrinsics[4]
-    fy = camera.intrinsics[5]
-    cx = camera.intrinsics[6]
-    cy = camera.intrinsics[7]
-
-    X = (xs - cx) * Z / fx
-    Y = (ys - cy) * Z / fy
-
-    points = np.stack([X, Y, Z], axis=1)
-    print (np.mean(points, axis=0), "mean" )
-    return np.median(points, axis=0)
 
 def threaded_VLM_wrapper(processorLL, model_name, caption, frame, objects, timing, result_container, list_of_actions):
     result = processorLL.VLM_process_func(model_name, caption, frame, objects, list_of_actions, timing)
@@ -181,10 +134,6 @@ def build_current_goals_landmarks(goals_beliefs, obs_type_to_id, object_to_id):
                     this_goal.append(landmark_id)
 
                 mapping[goal] = this_goal
-
-            #print("v1:", mapping[goal])
-
-        #print("mapping:", mapping)
         return mapping
 
 def mapping_infos(obs_type_to_id, object_to_id):
@@ -192,27 +141,31 @@ def mapping_infos(obs_type_to_id, object_to_id):
     for obj, obj_id in object_to_id.items():
         for obs_type, obs_type_id in obs_type_to_id.items():
             landmark_id = obs_type_id + obj_id
-            # Save landmark info if not already recorded
             if landmark_id not in landmark_info:
                 landmark_info[landmark_id] = {
                     "type": obs_type,
                     "object": obj,
                     "id": landmark_id
                 }
-    #print("landmark_info:", landmark_info)
     return landmark_info
 
 def moving_closer(dict_3d_positions, hand_position_3d, last_distance):
+    print("last distance ", last_distance)
     diff_distance=dict_3d_positions.copy()
     closest_object= []
     new_observation = []
-
-    #print(f"test diff distance 3d avant", diff_distance)
     for name, pos in diff_distance.items():
+        print(name)
         if name in last_distance and name != 'person':
             distance = np.linalg.norm(pos -hand_position_3d)
             diff = last_distance[name] - distance
-            if diff>0 :
+            print ("HAND POS",hand_position_3d )
+            print("POS", pos)
+            print ("DIFF",diff )
+            print("DISTANCE", distance)
+
+            if diff>0 : 
+                print("a")
                 new_obs= {}
                 new_obs['type']= "moving_closer"
                 new_obs['object']= name
@@ -224,14 +177,8 @@ def moving_closer(dict_3d_positions, hand_position_3d, last_distance):
 
     for name in list(last_distance.keys()):
         if name not in diff_distance:
-            #delete the line of name in diff_distance
-            #del diff_distance[name]
             del last_distance[name]
-            #print(f"object deleted:", name,"in", last_distance)
 
-    #print(f"test diff distance 3d apres", diff_distance)
-    #print(f"closest object", closest_object)
-    #print(f"new observations", new_observation)
     return closest_object, diff_distance, new_observation
 
 def save_last_distance(dict_3d_positions, hand_position_3d):
@@ -250,7 +197,7 @@ def ID_to_text(ID, mapping_info):
         if index==ID:
             return landmark_text
 
-def generate_observations_live(dict_3d_positions, hand_position_3d, object_to_action_ids, mapping_info, threshold=100):
+def generate_observations_live(dict_3d_positions, hand_position_3d, threshold=0.2):
     observations = []
     test_observations = {}
     save_observations = {}
@@ -269,7 +216,6 @@ def generate_observations_live(dict_3d_positions, hand_position_3d, object_to_ac
         print("No objects detected within the threshold.")
         return observations
 
-    # Step 3: Take the closest object
     closest_object = sorted_objects[0][0]  # name
     observation_type = "closest_object"
 
@@ -277,7 +223,6 @@ def generate_observations_live(dict_3d_positions, hand_position_3d, object_to_ac
     test_observations['object']=closest_object
     observations.append(test_observations)
 
-    #print("Observations generated:", observations)
     return observations
 
 def match_obs_with_landmarks_id(observations, mapping_info):
@@ -290,7 +235,7 @@ def match_obs_with_landmarks_id(observations, mapping_info):
                 observations_ID.append(info["id"])
     return observations_ID
 
-def goals_candidate(dict_3d_positions, hand_position_3d, list_of_goals, path="time_spent.csv"):                    # Add the closest object as goal if it's not already in the list
+def goals_candidate(dict_3d_positions, hand_position_3d, list_of_goals, path):                    # Add the closest object as goal if it's not already in the list
     if not dict_3d_positions:
         print("Can't have the 3D pos so no possible candidate")
         return None
@@ -361,8 +306,8 @@ def display_goal_estimation(frame, goals_beliefs, object_boxes, previous_object_
                     object_goals[object_name] = [goal, probability]
 
     # Step 2: Draw bounding boxes and goal
-    camera.draw_goal_boxes(frame, object_boxes, object_goals)
-    camera.draw_gaze(frame, gaze_finalvalue)
+    draw_goal_boxes(frame, object_boxes, object_goals)
+    draw_gaze(frame, gaze_finalvalue)
 
 
     # Step 3: Compute FPS
@@ -391,7 +336,7 @@ def display_goal_estimation(frame, goals_beliefs, object_boxes, previous_object_
 
     return object_goals
 
-def online_goal_estimation(camera, image, goals_beliefs, list_of_bounding_boxes, gaze_finalvalue, closest_object_observations=None):
+def online_goal_estimation(image, goals_beliefs, list_of_bounding_boxes, gaze_finalvalue, closest_object_observations=None):
     frame = image 
     if frame is None:
         return {}
@@ -405,12 +350,12 @@ def online_goal_estimation(camera, image, goals_beliefs, list_of_bounding_boxes,
                 if probability > object_goals[obj][1]:
                     object_goals[obj] = [goal, probability]
 
-    camera.draw_goal_boxes(frame, list_of_bounding_boxes, object_goals)
+    draw_goal_boxes(frame, list_of_bounding_boxes, object_goals)
     if closest_object_observations is not None:
         cv2.putText(frame, f"Closest object: {', '.join(str(closest_object_observations))}", (10, 80),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
     if gaze_finalvalue is not None:
-        camera.draw_gaze(frame, gaze_finalvalue)
+        draw_gaze(frame, gaze_finalvalue)
 
     cv2.imshow("Goal Recognition", frame)
     return object_goals
@@ -485,18 +430,11 @@ def load_transition_matrix(path="inference/transition_proba_for_hmm.json"):
 def filter_observations(list_of_observations, list_of_goals, mapping_info):
     filtred_observations = []
     for obs in list_of_observations:
-        #print("list of observations test",list_of_observations)
-        #print("obs test", obs)
-        #print("list of goals test", list_of_goals)
-        #print("obs:", obs)
+
         obs_text= ID_to_text(obs, mapping_info)
-        #print("obs in words", obs_text["object"])
         for obj in list_of_goals:
             if f"({obs_text['object']})" in obj:
-                #print("test working")
                 id_act=(obs)
-                #print("id_act:",id_act)
                 build_obs = (id_act, obj)
                 filtred_observations.append(build_obs)
-    #print(f"filtred_observations: {filtred_observations}")
     return filtred_observations

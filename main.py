@@ -1,4 +1,9 @@
-# === Imports ===
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT / "src"))
+
 
 import cv2
 import time
@@ -14,14 +19,11 @@ import re
 import json
 import csv
 
-# === External Modules ===
-from orbbec.orbbec_api import OrbbecPlugin as pluginOrbbec
-from orbbec.orbbec_api import PointCloudLike
-from inference.HMM import HMM
-from inference.VLM import VLMProcessor
+from rtgr.inference.hmm import HMM
+from rtgr.inference.VLM import VLMProcessor
 from langchain_ollama import OllamaLLM as Ollama
 from sentence_transformers import SentenceTransformer 
-from inference.similaritymodel import SentenceSimilarityModel
+from rtgr.inference.similaritymodel import SentenceSimilarityModel
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline, BitsAndBytesConfig
@@ -33,18 +35,23 @@ from collections import defaultdict
 from ultralytics import YOLO
 import os
 import open3d as o3d
-from inference.HMM_grab import GrabHMM
-from inference.Hand_position import HandPositionReader
-from inference.receive_gaze import EyesTracking
-
-from utils import *
-
+from rtgr.inference.hmm_grab import GrabHMM
+from rtgr.inference.Hand_position import HandPositionReader
+from rtgr.inference.receive_gaze import EyesTracking
+from rtgr.perception.object_detection import *
+from rtgr.utils import *
+from rtgr.config.paths import  YOLO_MODEL, TRANSITION_MATRIX, GOALS_TYPE_CSV, TIME_SPENT_CSV, RELATED_GOALS_JSON
+from rtgr.sensors.orbbec.orbbec_depth_sensor import *
+from rtgr.perception.hand_tracking.hand_mediapipe import *
+import time
 
 # === Parameters ===
 video_path = "recorded_stream.svo"
-yolo_model_path = "yolov8n-seg.pt"
+
 VLM_model_name = "llava-phi3" 
-OBJECT_TYPES = load_object_types("goals_type.csv")
+OBJECT_TYPES = load_object_types(str(GOALS_TYPE_CSV))
+model = YOLO(YOLO_MODEL)
+classes = list(model.names.values()) if hasattr(model, "names") else []
 
 #mediapipe hand detection
 mp_hands = mp.solutions.hands 
@@ -57,19 +64,11 @@ hands = mp_hands.Hands(
 )
 
 
-if not os.path.exists(yolo_model_path):
-    print("Download YOLOv8n-seg...")
-    yolo_model= YOLO(yolo_model_path)
-    detectable_classes = list(yolo_model.names.values())
-
-    print("Detectable classes :", detectable_classes)
-    print("Model downloaded")
-
 # Timers and thresholds
 yolo_timer = datetime.now()
 timer = datetime.now()
 waiting_timer = datetime.now()
-yolo_updating_time = 0.50
+yolo_updating_time = 0.20
 updating_time = 0.1
 threshold_proba = 0.75
 temperature = 0.4
@@ -100,15 +99,11 @@ obs_type_to_id={
     #"grasp_attempt": 5000,
     #"current_state": 6000,
 }
-# Simple loop pour afficher le flux Orbbec (RGB + overlay gaze si disponible)
 
-camera = pluginOrbbec(yolo_model_path)
 
-# Lancer le tracker des yeux en arrière-plan (optionnel mais utile pour afficher le regard)
 tracker = EyesTracking()
 eye_thread = threading.Thread(target=tracker.stream_data, daemon=True)
 eye_thread.start()
-camera.eye_tracker = tracker
 
 # Initialize VLM processor
 processorLL = VLMProcessor()
@@ -127,20 +122,26 @@ smodel = SentenceTransformer("all-MiniLM-L6-v2")
 smModel = SentenceSimilarityModel(smodel)
 
 
+camera: DepthSensor = OrbbecDepthSensor()
+camera.start()
+hand: HandTracker = MediaPipeHand()
 
 
+#iter counter
+iter = 0
+iter_time = 0
 if __name__ == "__main__":
 
 
     #Initialize HMM
-    image, _ = camera.get_frames()
+    image, depth = camera.get_frames()
     while image is None:
-        image, _ = camera.get_frames()
-    detections, image = online_objet_recognition(camera)
-    classes = camera.classes
+        image, depth = camera.get_frames()
+    detections = detect_objects(image, model)
+    classes = list(model.names.values()) if hasattr(model, "names") else []
     object_to_id = {obj: idx for idx, obj in enumerate(classes)}
     goals_beliefs = {goal: 1 / len(list_of_goals) for goal in list_of_goals}
-    loaded_matrix= load_transition_matrix(path="inference/transition_proba_for_hmm.json")
+    loaded_matrix= load_transition_matrix(TRANSITION_MATRIX)
     transition_proba =create_transition_matrix(goals_beliefs, list_of_goals, loaded_matrix)
     current_goals_landmarks = build_current_goals_landmarks(goals_beliefs, obs_type_to_id, object_to_id)
     mapping_info = mapping_infos(obs_type_to_id, object_to_id)
@@ -148,11 +149,11 @@ if __name__ == "__main__":
     hmm = HMM(goals_beliefs, transition_proba, current_goals_landmarks, decreasing_actions)
     landmark_uniqueness = hmm.get_landmarks_uniqueness() #uniqueness computation (proba d'observer certaines actions selon chaque objectif)
     hmm.compute_likelihood_table(heuristic_ratio, landmark_uniqueness)
-    hand_position_3d = np.array([0.0, 0.0, 0.0])
+    hand._3Dpos = np.array([np.inf, np.inf, np.inf])
+    dict_3d_positions = estimate_objects_3d_positions(detections, depth, classes)
+
     list_of_observations = []
-
-
-
+    last_distance= save_last_distance(dict_3d_positions, hand._3Dpos)
 
 
 
@@ -161,60 +162,25 @@ if __name__ == "__main__":
         yolo_elapsed_time = current_time - yolo_timer
         elapsed_time = current_time - timer
         image, depth = camera.get_frames()
-        points3d = camera.depth_to_3dpoints()
         results = hands.process( cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-
-        if results.multi_hand_landmarks:
-            hand = results.multi_hand_landmarks[0]
-            xs = [lm.x for lm in hand.landmark]
-            ys = [lm.y for lm in hand.landmark]
-
-            cx = int(np.mean(xs) * image.shape[1])
-            cy = int(np.mean(ys) * image.shape[0])
-
-            hand_position_3d = points3d[cy, cx]
-            cv2.circle(image, (cx, cy), 8, (0, 0, 255), -1)
+        hand.update(image, depth)
+        
 
         start_time = time.time()
-        gaze_position = find_gaze_value(camera)
-        if gaze_position is not None:
-        	gaze_finalvalue= convert_gaze(image,gaze_position)
-        else:
-        	gaze_finalvalue="Unknown"
+        gaze_finalvalue="Unknown"
 
         if yolo_elapsed_time.total_seconds() > yolo_updating_time:
             yolo_timer = datetime.now()
 
-            detections, image = online_objet_recognition(camera)
-            gaze_position = find_gaze_value(camera)
-            if gaze_position is not None:
-                gaze_finalvalue= convert_gaze(image,gaze_position)
-            else:
-                gaze_finalvalue="Unknown"
-            dict_3d_positions = {}
-            for det in detections:
-                name = camera.model.names[det["class_id"]]
-                mask = det.get("mask")
-                
-                # Handle multiple objects of the same class
-                if name in dict_3d_positions:
-                    counter = 2
-                    new_name = f"{name}{counter}"
-                    while new_name in dict_3d_positions:
-                        counter += 1
-                        new_name = f"{name}{counter}"
-                    name = new_name
-                if mask is not None:
-                    resized_mask = cv2.resize(mask, (points3d.shape[1], points3d.shape[0]), interpolation=cv2.INTER_NEAREST)
-                    pos = compute_3d_position_from_mask(resized_mask, camera, depth)
-                    if pos is not None:
-                        dict_3d_positions[name] = pos
-            resYolo = [camera.model.names[detection["class_id"]] for detection in detections]
-            list_of_IDs = [detection["class_id"] for detection in detections]
-            new_dict_of_objects = rename_objects(detections, camera)
-            possible_actions = build_all_possible_goals(list_of_actions, list(new_dict_of_objects.keys()))
+            detections = detect_objects(image, model)
+            gaze_finalvalue="Unknown"
+            dict_3d_positions = estimate_objects_3d_positions(detections, depth, classes)
 
-            dict_of_objects = rename_objects(detections, camera)
+            resYolo = [model.names[detection["class_id"]] for detection in detections]
+            list_of_IDs = [detection["class_id"] for detection in detections]
+            new_dict_of_objects = rename_objects(detections, model)
+            possible_actions = build_all_possible_goals(list_of_actions, list(new_dict_of_objects.keys()))
+            dict_of_objects = rename_objects(detections, model)
 
              #VLM Preptreatement /thread
             if (datetime.now() - last_vlm_time).total_seconds() > 3:
@@ -241,7 +207,6 @@ if __name__ == "__main__":
                 result = vlm_result_container.get("result", None)
                 if result:
                     current_state = result if isinstance(result, list) else [result]
-                    print(f"current_state mis à jour par VLM : {current_state}")
 
                     if dict_of_objects:
                         list_of_goals = process_multiline_caption(result, smModel, list_of_actions, list(dict_of_objects_at_vlm_time.keys()))
@@ -249,7 +214,7 @@ if __name__ == "__main__":
                         print("No object detected — skipping similarity_model call.")
                         list_of_goals = []
 
-                    goal_candidate= goals_candidate(dict_3d_positions, hand_position_3d, list_of_goals)
+                    goal_candidate= goals_candidate(dict_3d_positions, hand._3Dpos, list_of_goals, TIME_SPENT_CSV)
                     if goal_candidate:
                         list_of_goals.extend(goal_candidate)
 
@@ -258,6 +223,7 @@ if __name__ == "__main__":
 
 
                     if set(list_of_goals) != set(hmm.goal_beliefs.keys()):
+                        print("VCVVVVVVVV")
 
                         hmm.goal_beliefs = {goal: 1 / len(list_of_goals) for goal in list_of_goals}
                         hmm.transition_proba = create_transition_matrix(hmm.goal_beliefs, list_of_goals, loaded_matrix)
@@ -271,12 +237,11 @@ if __name__ == "__main__":
                             obj = goal.split('(')[-1].strip(') ')
                             object_to_action_ids[obj].extend(ids)
 
-                    closest_object, diff_distance, new_observation= moving_closer(dict_3d_positions, hand_position_3d, last_distance)
-                    closest_object_observations = generate_observations_live(dict_3d_positions, hand_position_3d, object_to_action_ids, mapping_info)
+                    closest_object, diff_distance, new_observation= moving_closer(dict_3d_positions, hand._3Dpos, last_distance)
+                    closest_object_observations = generate_observations_live(dict_3d_positions, hand._3Dpos)
                     all_observations=[]
                     all_observations= closest_object_observations + new_observation
                     list_of_observations = match_obs_with_landmarks_id(all_observations, mapping_info)
-                    last_distance= save_last_distance(dict_3d_positions, hand_position_3d)
                     list_of_observations = [obs for obs in list_of_observations if obs != 99]
 
                 vlm_thread = None
@@ -301,13 +266,12 @@ if __name__ == "__main__":
                         obj = goal.split('(')[-1].strip(') ')
                         object_to_action_ids[obj].extend(ids)
 
-                closest_object, diff_distance, new_observation = moving_closer(dict_3d_positions, hand_position_3d, last_distance)
-                closest_object_observations = generate_observations_live(dict_3d_positions, hand_position_3d, object_to_action_ids, mapping_info) #generated observations simulated to estimate the probability of each goal being pursued.
+                closest_object, diff_distance, new_observation = moving_closer(dict_3d_positions, hand._3Dpos, last_distance)
+                closest_object_observations = generate_observations_live(dict_3d_positions, hand._3Dpos) #generated observations simulated to estimate the probability of each goal being pursued.
                 all_observations=[]
                 all_observations= closest_object_observations + new_observation
                 list_of_observations = match_obs_with_landmarks_id(all_observations, mapping_info)
-                last_distance= save_last_distance(dict_3d_positions, hand_position_3d)
-                goal_candidate= goals_candidate(dict_3d_positions, hand_position_3d, list_of_goals)
+                goal_candidate= goals_candidate(dict_3d_positions, hand._3Dpos, list_of_goals, TIME_SPENT_CSV)
                 if goal_candidate:
                     list_of_goals.extend(goal_candidate)
 
@@ -316,6 +280,8 @@ if __name__ == "__main__":
 
 
                 if set(list_of_goals) != set(hmm.goal_beliefs.keys()):
+                    print("AAAAAAAAAAA")
+
                     # update the goal beliefs
                     hmm.goal_beliefs = {goal: 1 / len(list_of_goals) for goal in list_of_goals}
 
@@ -337,27 +303,24 @@ if __name__ == "__main__":
                 if '(' in goal:
                     obj = goal.split('(')[-1].strip(') ')
                     object_to_action_ids[obj].extend(ids)
-            last_distance = save_last_distance(dict_3d_positions, hand_position_3d)
-            closest_object, diff_distance, new_observation = moving_closer(dict_3d_positions, hand_position_3d, last_distance)
-            closest_object_observations = generate_observations_live(dict_3d_positions, hand_position_3d, object_to_action_ids, mapping_info) 
+            closest_object, diff_distance, new_observation = moving_closer(dict_3d_positions, hand._3Dpos, last_distance)
+            print("new observation", new_observation)
+
+            closest_object_observations = generate_observations_live(dict_3d_positions, hand._3Dpos) 
             all_observations=[]
             all_observations= closest_object_observations + new_observation
-            print("All observations:", all_observations)
             list_of_observations = match_obs_with_landmarks_id(all_observations, mapping_info)
-            last_distance= save_last_distance(dict_3d_positions, hand_position_3d)
-            z_positions=create_z_position_list(dict_3d_positions)
-            min_dist = min(z_positions.values())
-            grab_hmm = GrabHMM()
-            state, conf = grab_hmm.update(min_dist)
+            last_distance= save_last_distance(dict_3d_positions, hand._3Dpos)
 
-            # Add the closest object as goal if it's not already in the list
-            goal_candidate= goals_candidate(dict_3d_positions, hand_position_3d, list_of_goals)
+            goal_candidate= goals_candidate(dict_3d_positions, hand._3Dpos, list_of_goals, TIME_SPENT_CSV)
             if goal_candidate:
                 list_of_goals.extend(goal_candidate)
             if "Undecided" not in list_of_goals:
                 list_of_goals.append("Undecided")
-            # if the list of goals is different from the previous one, update the HMM
+
             if set(list_of_goals) != set(hmm.goal_beliefs.keys()):
+                print("BBBBBBBB")
+
                 # update the goal beliefs
                 hmm.goal_beliefs = {goal: 1 / len(list_of_goals) for goal in list_of_goals}
 
@@ -382,13 +345,22 @@ if __name__ == "__main__":
 
         if list_of_observations:
            filtred_observations= filter_observations(list_of_observations, list_of_goals, mapping_info)
-           print("Filtered observations:", filtred_observations)
            alpha, current_goal = hmm.assisted_teleop(updating_time, memory_loss_value, filtred_observations)
 
         for value in hmm.goal_beliefs.values():
                 if value > threshold_proba:
                     new_goal_achieved = True   
-        object_goals = online_goal_estimation(camera, image,  hmm.goal_beliefs, dict_of_objects, gaze_finalvalue, closest_object_observations)
+
+        try :
+            object_goals = online_goal_estimation(image,  hmm.goal_beliefs, dict_of_objects, gaze_finalvalue, closest_object_observations)
+
+        except Exception as e:
+            print("ok")
+
+
+
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
     cv2.destroyAllWindows()
+
+camera.stop()
