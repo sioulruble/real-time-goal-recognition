@@ -12,8 +12,6 @@ class SentenceSimilarityModel:
         """
         Compute the similarity between two sentences using the provided model.
         """
-        #encode sentences to get their embeddings
-        #device = torch.device("cpu")
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         embedding1 = self.model.encode(sentence1, convert_to_tensor=True)
@@ -67,17 +65,26 @@ class SentenceSimilarityModel:
         list_final = self.get_list_of_actions(paired_sorted)
         
         return list_final
+    
+def process_multiline_caption(caption: str, similarity_model: SentenceSimilarityModel, list_of_actions, list_of_objects, top_k=1):
+    # Split caption into non-empty lines
+    lines = extract_clean_lines(caption)
 
-if __name__ == "__main__":
-    # Example usage
-    # Load the model (this may take some time)
-    model_name = SentenceTransformer("all-MiniLM-L6-v2")
-    model = SentenceSimilarityModel(model_name)
-    sentence1 = "The bootle can be grab"
-    list_of_actions = [
-    "grab(object1)", "push(object1)", "pour(object1; object2)",
-    "watch(object1)", "talk_with(object1)"
-    ]
-    list_of_objects = ["bootle", "cup", "glass"]
-    list_of_actions = model.similarity_model(sentence1, list_of_actions, list_of_objects)
-    #print("List of actions:", list_of_actions)
+    selected_goals = []
+    all_possible = []
+    # Generate all possible actions from current objects
+    all_possible = similarity_model.all_possible_actions(list_of_actions, list_of_objects)
+
+    for line in lines:
+        paired_sorted = similarity_model.get_paired_sorted(line, all_possible)
+        top_actions = [action for action, score in paired_sorted[:top_k]]
+        selected_goals.extend(top_actions)
+
+    return selected_goals
+
+def extract_clean_lines(caption: str):
+    return [line.strip().replace("'", "").replace("[", "").replace("]", "") for line in caption.split(',')]
+
+
+
+

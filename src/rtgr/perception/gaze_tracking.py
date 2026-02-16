@@ -74,3 +74,17 @@ class EyesTracking:
 		self.server_socket.close()
 
 
+def find_gaze_value(camera):
+    gaze_position=camera.eye_tracker.gaze_position
+    return gaze_position
+
+def convert_gaze(frame,gaze_position):
+    if frame is None or not isinstance(frame, np.ndarray):
+        return None
+    h,w = frame.shape[:2]
+    u,v= float(gaze_position[0]), float(gaze_position[1])
+    x = int(u*w)
+    y = int((1-v)*h)
+    return x,y
+
+

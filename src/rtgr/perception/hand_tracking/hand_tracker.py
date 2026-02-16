@@ -8,7 +8,7 @@ class HandTracker(ABC):
         return self._last_position_3d
 
     @abstractmethod
-    def update(self, image, points3d):
+    def update_position(self, image=None, points3d=None):
         """
         Met à jour la position 3D de la main
         image : image RGB ou BGR
