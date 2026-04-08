@@ -1,4 +1,4 @@
-# Real-Time Goal Recognition
+# real time intent recognition 
 
 A small research prototype for **online human goal inference**
 from RGB-D vision.
