@@ -1,13 +1,13 @@
-# HMM-based multimodal intent state inference
+# hmm-based intent state inference
 
-<video src="https://github.com/user-attachments/assets/cbe5f18f-f11e-473c-8bf5-284c170bca3a" controls width="80%"></video>
+<video src="https://github.com/user-attachments/assets/cbe5f18f-f11e-473c-8bf5-284c170bca3a" controls width="70%"></video>
 
 A small research prototype for **online human goal inference**
 from RGB-D vision.
 
 The system combines object detection, hand motion,
 vision–language cues, and probabilistic temporal inference
-to estimate user intent during manipulation.
+to estimate user intent during manipulation/shared autonomy.
 
 ---
 
@@ -19,10 +19,11 @@ RGB-D → Objects & Hand → VLM Hypotheses → HMM → Goal Beliefs
 - Semantic cues suggest goals, never decide them  
 - A Hidden Markov Model fuses noisy observations over time  
 
-The main loop only orchestrates data flow.
+The main loop is minimalistic and only orchestrates data flow.
 
 ## structure
 
+```bash
 ├── main.py
 ├── requirements.txt
 │
@@ -34,7 +35,7 @@ The main loop only orchestrates data flow.
     ├── perception/          # object & hand detection/tracking (YOLO)
     ├── inference/           # goal recognition engine (HMM, rules)
     └── visualization/       # real-time annotation rendering
-
+```
 
 Two abstract interfaces structure the system:
 
