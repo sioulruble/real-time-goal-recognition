@@ -1,6 +1,5 @@
 # HMM-based intent state inference
 
-<video src="https://github.com/user-attachments/assets/cbe5f18f-f11e-473c-8bf5-284c170bca3a" controls width="50%"></video>
 
 A small research prototype for **online human goal inference**
 from RGB-D vision.
